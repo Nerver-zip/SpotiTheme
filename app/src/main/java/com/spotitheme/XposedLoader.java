@@ -21,9 +21,35 @@ import com.spotitheme.hooks.PlayerActionsHook;
 import com.spotitheme.hooks.SongDnaHook;
 import com.spotitheme.hooks.RepeatIconHook;
 import com.spotitheme.hooks.PlayerHeaderHook;
+import com.spotitheme.hooks.SearchLandingHook;
+import com.spotitheme.hooks.PlaylistCreationHook;
+import com.spotitheme.hooks.LibraryHeaderHook;
+import com.spotitheme.hooks.PlaylistHeaderScope;
+import com.spotitheme.hooks.PlaylistTextHook;
+import com.spotitheme.hooks.PlaylistGradientHook;
+import com.spotitheme.hooks.PlaylistAppBarHook;
+import com.spotitheme.hooks.AlbumComposeGradientHook;
+import com.spotitheme.hooks.AlbumHeaderInflationHook;
+import com.spotitheme.hooks.LegacyAlbumGradientHook;
+import com.spotitheme.hooks.MainContentBackgroundHook;
+import com.spotitheme.hooks.LandscapeSidePanelHook;
+import com.spotitheme.hooks.SideDrawerHook;
 import com.spotitheme.hooks.ArtistBiographyCardHook;
 import com.spotitheme.hooks.ArtistBiographyPaletteHook;
+import com.spotitheme.hooks.HomeFilterChipHook;
+import com.spotitheme.hooks.HomeHeaderHook;
+import com.spotitheme.hooks.HomeShortcutHook;
+import com.spotitheme.hooks.HomeShortcutTitleHook;
+import com.spotitheme.hooks.HomeCarouselTextHook;
+import com.spotitheme.hooks.NativeViewPaletteHook;
+import com.spotitheme.hooks.ActivityPaletteHook;
+import com.spotitheme.hooks.NavigationGradientHook;
+import com.spotitheme.hooks.ModernAlbumHeaderHook;
+import com.spotitheme.hooks.ArtistHeaderChromeHook;
+import com.spotitheme.hooks.ArtistBodyScrimHook;
+import com.spotitheme.hooks.TrackRowColorsHook;
 import com.spotitheme.hooks.CountdownPhotoTitleHook;
+import com.spotitheme.hooks.AlbumSavedIndicatorHook;
 import com.spotitheme.hooks.ThemeResourcesHook;
 import com.spotitheme.profile.Profile_9_1_86_2432;
 import com.spotitheme.theme.ThemePalette;
@@ -33,8 +59,6 @@ import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import android.content.res.XModuleResources;
-import com.spotitheme.hooks.NativeViewPaletteHook;
-import com.spotitheme.hooks.ActivityPaletteHook;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
@@ -45,8 +69,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookInitPackageResources, IXposedHookZygoteInit {
     public static final String SPOTIFY = "com.spotify.music";
     private final AtomicBoolean initialized = new AtomicBoolean();
-    private ThemeRuntime runtime;
     private String modulePath;
+    private ThemeRuntime runtime;
+
     @Override public void initZygote(StartupParam param) { modulePath = param.modulePath; }
 
     @Override public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
@@ -80,13 +105,18 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
                 palette = ThemePaletteParser.parse(stream);
             }
             runtime = new ThemeRuntime(palette, true, true);
+            runtime.addListener(this::applyResources);
             ThemePalette nativePalette;
             try (InputStream stream = assets.open("themes/spotify-dark.json")) {
                 nativePalette = ThemePaletteParser.parse(stream);
             }
+            ModuleLog.info("Registration checkpoint=assets elapsedMs="
+                    + (StartupMetrics.start() - started) / 1_000_000.0);
             new NativeViewPaletteHook(runtime, nativePalette, profile).install();
-            new BasePaletteHook(runtime, profile).install();
-            new ActivityPaletteHook(runtime).install((Application) context.getApplicationContext());
+            BasePaletteHook palettes = new BasePaletteHook(runtime, profile);
+            palettes.install();
+            ModuleLog.info("Registration checkpoint=base-palettes elapsedMs="
+                    + (StartupMetrics.start() - started) / 1_000_000.0);
             new ConnectBitmapHook(runtime, profile).install();
             new SavedIndicatorHook(runtime, profile).install();
             new MiniBackgroundHook(runtime, profile).install();
@@ -103,10 +133,41 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             new SongDnaHook(runtime, profile).install();
             new RepeatIconHook(runtime).install();
             new PlayerHeaderHook(runtime, profile).install();
+            ModuleLog.info("Registration checkpoint=players elapsedMs="
+                    + (StartupMetrics.start() - started) / 1_000_000.0);
+            new SearchLandingHook(runtime, profile).install();
+            new PlaylistCreationHook(runtime, profile).install();
+            new LibraryHeaderHook(runtime, profile).install();
+            PlaylistHeaderScope playlistHeader = new PlaylistHeaderScope();
+            playlistHeader.install();
+            new PlaylistTextHook(runtime, profile, playlistHeader).install();
+            new PlaylistGradientHook(runtime, profile, playlistHeader).install();
+            new PlaylistAppBarHook(runtime, playlistHeader).install();
+            new AlbumComposeGradientHook(runtime, profile, context).install();
+            new AlbumHeaderInflationHook(runtime).install();
+            new LegacyAlbumGradientHook(runtime, profile).install();
+            new MainContentBackgroundHook(runtime).install();
+            new LandscapeSidePanelHook(runtime).install();
+            new SideDrawerHook(runtime, profile).install();
             new ArtistBiographyCardHook(runtime).install();
             new ArtistBiographyPaletteHook(runtime, profile).install();
+            new HomeFilterChipHook(runtime, profile).install();
+            new HomeHeaderHook(runtime, profile).install();
+            new HomeShortcutHook(runtime).install();
+            new HomeShortcutTitleHook(runtime, profile).install();
+            new HomeCarouselTextHook(runtime).install();
+            new NavigationGradientHook(runtime, profile).install();
+            new ModernAlbumHeaderHook(runtime, profile).install();
+            new ArtistHeaderChromeHook(runtime, profile).install();
+            new ArtistBodyScrimHook(runtime, profile, palettes).install();
+            new TrackRowColorsHook(runtime, profile, row -> {}).install(context);
             new CountdownPhotoTitleHook(runtime, profile).install();
-            runtime.addListener(this::applyResources);
+            new AlbumSavedIndicatorHook(runtime, profile).install();
+            ModuleLog.info("Registration checkpoint=surface-hooks elapsedMs="
+                    + (StartupMetrics.start() - started) / 1_000_000.0);
+            new ActivityPaletteHook(runtime).install(application);
+            ModuleLog.info("Registration checkpoint=lifecycle-artwork elapsedMs="
+                    + (StartupMetrics.start() - started) / 1_000_000.0);
             applyResources();
             ModuleLog.info("Module initialized in Spotify; palette=" + palette.getId());
         } catch (Throwable failure) {
