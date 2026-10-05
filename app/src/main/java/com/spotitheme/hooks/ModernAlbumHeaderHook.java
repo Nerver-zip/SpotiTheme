@@ -91,7 +91,7 @@ public final class ModernAlbumHeaderHook {
         Integer extracted = roots.get(root);
         int start = state.fixed ? end : extracted == null ? state.palette.color("background") : extracted | 0xFF000000;
         background(child(root, "cwp_header_artwork_background"),
-                new AlbumArtworkGradient(start, end, state.animated));
+                new AlbumArtworkGradient(start, end));
         background(root, new ColorDrawable(end));
         background(child(root, "toolbar"), new ColorDrawable(end));
         for (String name : new String[]{"cwp_header_title", "cwp_header_creatorsRow", "toolbar_title"}) text(child(root, name), "text");

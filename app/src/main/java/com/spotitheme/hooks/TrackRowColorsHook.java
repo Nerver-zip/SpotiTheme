@@ -6,7 +6,6 @@ import android.graphics.Color;
 import com.spotitheme.ModuleLog;
 import com.spotitheme.profile.Profile_9_1_86_2432;
 import com.spotitheme.theme.ThemeRuntime;
-import java.util.function.Consumer;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import java.lang.reflect.Method;
@@ -20,12 +19,11 @@ import java.util.ArrayList;
 /** Pinned entity attributes and cached row selectors preserve playback states. */
 public final class TrackRowColorsHook {
     private final ThemeRuntime runtime;
-    private final Consumer<View> registerRow;
     private final Profile_9_1_86_2432 profile;
     private final Map<TextView, ColorStateList> originalText = new WeakHashMap<>();
     private final Map<TextView, Boolean> rowTitles = new WeakHashMap<>();
-    public TrackRowColorsHook(ThemeRuntime runtime, Profile_9_1_86_2432 profile, Consumer<View> registerRow) {
-        this.runtime = runtime; this.profile = profile; this.registerRow = java.util.Objects.requireNonNull(registerRow);
+    public TrackRowColorsHook(ThemeRuntime runtime, Profile_9_1_86_2432 profile) {
+        this.runtime = runtime; this.profile = profile;
     }
     public void install(Context context) throws ReflectiveOperationException {
         Method binding = (Method) profile.resolve("entity.titleBinding");
@@ -62,7 +60,6 @@ public final class TrackRowColorsHook {
                 Object root = rowRoot.get(param.getResult());
                 if (!(root instanceof View)) return;
                 View row = (View) root;
-                registerRow.accept(row);
                 if (titleView != 0) remember(row.findViewById(titleView), true);
                 if (subtitleView != 0) remember(row.findViewById(subtitleView), false);
             }

@@ -60,7 +60,7 @@ public final class LandscapeSidePanelHook {
         ThemeRuntime.Snapshot state = runtime.snapshot();
         applying = true;
         try {
-            boolean themed = state.enabled && (state.fixed || state.animated);
+            boolean themed = state.enabled && state.fixed;
             view.setBackgroundTintList(themed ? null : original.tint);
             view.setBackground(themed ? new ColorDrawable(state.palette.color("background")) : original.background);
         } finally { applying = false; }

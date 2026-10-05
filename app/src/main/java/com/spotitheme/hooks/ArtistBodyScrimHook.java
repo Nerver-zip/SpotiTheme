@@ -67,10 +67,8 @@ public final class ArtistBodyScrimHook {
                 if (first != 0xBF121212 || last != 0xFF121212) return;
                 int rgb = runtime.snapshot().palette.color("albumHeaderBackground") & 0xFFFFFF;
                 List<Object> replacement = new ArrayList<>(2);
-                replacement.add(color.newInstance(runtime.snapshot().animated ? 0L
-                        : ((long) ((first & 0xFF000000) | rgb)) << 32));
-                replacement.add(color.newInstance(runtime.snapshot().animated ? 0L
-                        : ((long) ((last & 0xFF000000) | rgb)) << 32));
+                replacement.add(color.newInstance(((long) ((first & 0xFF000000) | rgb)) << 32));
+                replacement.add(color.newInstance(((long) ((last & 0xFF000000) | rgb)) << 32));
                 param.args[3] = replacement;
                 body.set(false);
             }

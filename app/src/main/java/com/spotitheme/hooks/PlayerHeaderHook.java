@@ -27,7 +27,7 @@ public final class PlayerHeaderHook {
                     if (!(local instanceof View) || !ViewScopes.expandedPlayer((View) local)
                             || !ViewScopes.ancestor((View) local, "player_overlay_header")) return;
                     runtime.observeComposition();
-                    if (runtime.snapshot().enabled && !runtime.snapshot().fixed && !runtime.snapshot().animated)
+                    if (runtime.snapshot().enabled && !runtime.snapshot().fixed)
                         param.setObjectExtra("spotitheme.close.native", NativePaletteScope.enter());
                 } catch (ReflectiveOperationException failure) { ModuleLog.error("Player close scope failed", failure); }
             }

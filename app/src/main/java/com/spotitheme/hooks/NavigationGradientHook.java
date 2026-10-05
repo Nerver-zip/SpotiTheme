@@ -65,9 +65,7 @@ public final class NavigationGradientHook {
         finally { applying = previous; }
     }
     private int bottomColor() {
-        return runtime.snapshot().animated ? 0xEE0A0E16
-                : runtime.snapshot().palette.color("background");
+        return runtime.snapshot().palette.color("background");
     }
-    private boolean fixed() { return runtime.snapshot().enabled
-            && (runtime.snapshot().fixed || runtime.snapshot().animated); }
+    private boolean fixed() { return runtime.snapshot().enabled && runtime.snapshot().fixed; }
 }

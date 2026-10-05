@@ -29,7 +29,6 @@ import com.spotitheme.hooks.PlaylistTextHook;
 import com.spotitheme.hooks.PlaylistGradientHook;
 import com.spotitheme.hooks.PlaylistAppBarHook;
 import com.spotitheme.hooks.AlbumComposeGradientHook;
-import com.spotitheme.hooks.AlbumHeaderInflationHook;
 import com.spotitheme.hooks.LegacyAlbumGradientHook;
 import com.spotitheme.hooks.MainContentBackgroundHook;
 import com.spotitheme.hooks.LandscapeSidePanelHook;
@@ -43,6 +42,8 @@ import com.spotitheme.hooks.HomeShortcutTitleHook;
 import com.spotitheme.hooks.HomeCarouselTextHook;
 import com.spotitheme.hooks.NativeViewPaletteHook;
 import com.spotitheme.hooks.ActivityPaletteHook;
+import com.spotitheme.hooks.TrackArtworkHook;
+import com.spotitheme.theme.ArtworkThemeController;
 import com.spotitheme.hooks.NavigationGradientHook;
 import com.spotitheme.hooks.ModernAlbumHeaderHook;
 import com.spotitheme.hooks.ArtistHeaderChromeHook;
@@ -71,6 +72,7 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
     private final AtomicBoolean initialized = new AtomicBoolean();
     private String modulePath;
     private ThemeRuntime runtime;
+    private ArtworkThemeController artworkController;
 
     @Override public void initZygote(StartupParam param) { modulePath = param.modulePath; }
 
@@ -144,7 +146,6 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             new PlaylistGradientHook(runtime, profile, playlistHeader).install();
             new PlaylistAppBarHook(runtime, playlistHeader).install();
             new AlbumComposeGradientHook(runtime, profile, context).install();
-            new AlbumHeaderInflationHook(runtime).install();
             new LegacyAlbumGradientHook(runtime, profile).install();
             new MainContentBackgroundHook(runtime).install();
             new LandscapeSidePanelHook(runtime).install();
@@ -160,12 +161,14 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             new ModernAlbumHeaderHook(runtime, profile).install();
             new ArtistHeaderChromeHook(runtime, profile).install();
             new ArtistBodyScrimHook(runtime, profile, palettes).install();
-            new TrackRowColorsHook(runtime, profile, row -> {}).install(context);
+            new TrackRowColorsHook(runtime, profile).install(context);
             new CountdownPhotoTitleHook(runtime, profile).install();
             new AlbumSavedIndicatorHook(runtime, profile).install();
             ModuleLog.info("Registration checkpoint=surface-hooks elapsedMs="
                     + (StartupMetrics.start() - started) / 1_000_000.0);
             new ActivityPaletteHook(runtime).install(application);
+            artworkController = new ArtworkThemeController(runtime);
+            new TrackArtworkHook(profile, artworkController::observe).install();
             ModuleLog.info("Registration checkpoint=lifecycle-artwork elapsedMs="
                     + (StartupMetrics.start() - started) / 1_000_000.0);
             applyResources();
