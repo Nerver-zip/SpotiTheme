@@ -92,7 +92,8 @@ public final class NativeStatusHook {
         if (!(object instanceof View)) return false;
         View view = (View) object;
         String name = ViewScopes.resource(view);
-        return ViewScopes.miniAncestor(view) && (name.equals("add_to_button") || name.equals("animated_heart_button"));
+        return (ViewScopes.miniAncestor(view) || ViewScopes.expandedPlayer(view))
+                && (name.equals("add_to_button") || name.equals("animated_heart_button"));
     }
 
     private void refresh() {

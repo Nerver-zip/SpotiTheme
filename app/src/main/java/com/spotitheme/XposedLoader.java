@@ -13,6 +13,17 @@ import com.spotitheme.hooks.MiniTransportHook;
 import com.spotitheme.hooks.MiniProgressHook;
 import com.spotitheme.hooks.MiniQueuedBadgeHook;
 import com.spotitheme.hooks.NativeStatusHook;
+import com.spotitheme.hooks.CreditsCardHook;
+import com.spotitheme.hooks.SystemBarsHook;
+import com.spotitheme.hooks.ExpandedBackgroundHook;
+import com.spotitheme.hooks.RelatedVideoHook;
+import com.spotitheme.hooks.PlayerActionsHook;
+import com.spotitheme.hooks.SongDnaHook;
+import com.spotitheme.hooks.RepeatIconHook;
+import com.spotitheme.hooks.PlayerHeaderHook;
+import com.spotitheme.hooks.ArtistBiographyCardHook;
+import com.spotitheme.hooks.ArtistBiographyPaletteHook;
+import com.spotitheme.hooks.CountdownPhotoTitleHook;
 import com.spotitheme.hooks.ThemeResourcesHook;
 import com.spotitheme.profile.Profile_9_1_86_2432;
 import com.spotitheme.theme.ThemePalette;
@@ -45,7 +56,7 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override protected void afterHookedMethod(MethodHookParam hook) {
                     if (hook.hasThrowable() || !initialized.compareAndSet(false, true)) return;
-                    initialize((Context) hook.args[0], param.classLoader);
+                    initialize((Context) hook.args[0], (Application) hook.thisObject, param.classLoader);
                 }
             });
         } finally {
@@ -53,7 +64,7 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
         }
     }
 
-    private void initialize(Context context, ClassLoader loader) {
+    private void initialize(Context context, Application application, ClassLoader loader) {
         long started = StartupMetrics.start();
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(SPOTIFY, 0);
@@ -84,6 +95,17 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             new MiniProgressHook(runtime).install();
             new MiniQueuedBadgeHook(runtime).install();
             new NativeStatusHook(runtime, profile).install();
+            new CreditsCardHook(runtime, profile).install();
+            new SystemBarsHook(runtime).install(application);
+            new ExpandedBackgroundHook(runtime, profile).install();
+            new RelatedVideoHook(runtime, profile).install();
+            new PlayerActionsHook(runtime, profile).install();
+            new SongDnaHook(runtime, profile).install();
+            new RepeatIconHook(runtime).install();
+            new PlayerHeaderHook(runtime, profile).install();
+            new ArtistBiographyCardHook(runtime).install();
+            new ArtistBiographyPaletteHook(runtime, profile).install();
+            new CountdownPhotoTitleHook(runtime, profile).install();
             runtime.addListener(this::applyResources);
             applyResources();
             ModuleLog.info("Module initialized in Spotify; palette=" + palette.getId());

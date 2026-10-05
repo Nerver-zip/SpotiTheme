@@ -44,7 +44,7 @@ public final class MiniBackgroundHook {
         XposedBridge.hookMethod(composeSet, new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 View view = (View) param.thisObject;
-                if (applying || !ViewScopes.miniBar(view)) return;
+                if (applying || !ViewScopes.playerBackgroundOwner(view)) return;
                 Original original = original(view);
                 original.compose = (Long) param.args[0];
                 if (fixed()) param.args[0] = packed();
@@ -58,7 +58,7 @@ public final class MiniBackgroundHook {
         XposedHelpers.findAndHookMethod(View.class, "setBackground", Drawable.class, new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 View view = (View) param.thisObject;
-                if (applying || !ViewScopes.miniBar(view)) return;
+                if (applying || !ViewScopes.playerBackgroundOwner(view)) return;
                 original(view).drawable = (Drawable) param.args[0];
                 if (fixed()) param.args[0] = replacement(view, (Drawable) param.args[0]);
             }
@@ -66,7 +66,7 @@ public final class MiniBackgroundHook {
         XposedHelpers.findAndHookMethod(View.class, "setBackgroundColor", int.class, new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 View view = (View) param.thisObject;
-                if (applying || !ViewScopes.miniBar(view)) return;
+                if (applying || !ViewScopes.playerBackgroundOwner(view)) return;
                 original(view).drawable = new ColorDrawable((Integer) param.args[0]);
                 if (fixed()) param.args[0] = color();
                 param.setObjectExtra("spotitheme.background.internal", Boolean.TRUE);
@@ -79,7 +79,7 @@ public final class MiniBackgroundHook {
         XposedHelpers.findAndHookMethod(View.class, "setBackgroundTintList", ColorStateList.class, new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 View view = (View) param.thisObject;
-                if (applying || !ViewScopes.miniBar(view)) return;
+                if (applying || !ViewScopes.playerBackgroundOwner(view)) return;
                 original(view).tint = (ColorStateList) param.args[0];
                 if (fixed()) param.args[0] = ColorStateList.valueOf(color());
             }
@@ -87,7 +87,7 @@ public final class MiniBackgroundHook {
         XposedHelpers.findAndHookMethod(View.class, "onAttachedToWindow", new XC_MethodHook() {
             @Override protected void afterHookedMethod(MethodHookParam param) {
                 View view = (View) param.thisObject;
-                if (ViewScopes.miniBar(view)) { original(view); view.post(() -> refresh(view)); }
+                if (ViewScopes.playerBackgroundOwner(view)) { original(view); view.post(() -> refresh(view)); }
             }
         });
         runtime.addListener(() -> {
@@ -109,7 +109,7 @@ public final class MiniBackgroundHook {
                 if (applying || !fixed()) return;
                 WeakReference<View> reference = owners.get((Drawable) param.thisObject);
                 View view = reference == null ? null : reference.get();
-                if (view == null || view.getBackground() != param.thisObject || !ViewScopes.miniBar(view)) return;
+                if (view == null || view.getBackground() != param.thisObject || !ViewScopes.playerBackgroundOwner(view)) return;
                 Original original = originals.get(view);
                 if (original == null) return;
                 // Replay Spotify's native mutation on the retained original, so

@@ -87,6 +87,8 @@ public final class SavedIndicatorHook {
         boolean scoped = ViewScopes.miniAncestor(view)
                 && (ViewScopes.resource(view).equals("add_to_button")
                     || ViewScopes.resource(view).equals("animated_heart_button"));
+        scoped |= ViewScopes.expandedPlayer(view)
+                && (imageState.getDeclaringClass().isInstance(view) || encoreState.getDeclaringClass().isInstance(view));
         scoped |= encoreState.getDeclaringClass().isInstance(view);
         if (!scoped && !icons.containsKey(view)) return;
         try {

@@ -26,7 +26,11 @@ public final class MiniProgressHook {
                 if (!(param.thisObject instanceof ProgressBar)) return;
                 ProgressBar bar = (ProgressBar) param.thisObject;
                 String name = ViewScopes.resource(bar);
-                if (!ViewScopes.miniAncestor(bar) || !(bar instanceof SeekBar ? name.equals("seek_bar") : name.equals("progress_bar"))) return;
+                boolean mini = ViewScopes.miniAncestor(bar)
+                        && (bar instanceof SeekBar ? name.equals("seek_bar") : name.equals("progress_bar"));
+                boolean expanded = ViewScopes.expandedPlayer(bar) && (bar instanceof SeekBar ? name.equals("seekbar")
+                        : bar.getParent() instanceof View && ViewScopes.resource((View) bar.getParent()).equals("revised_template_sticky_header"));
+                if (!mini && !expanded) return;
                 originals.putIfAbsent(bar, new ColorStateList[] {bar.getProgressTintList(),
                     bar.getSecondaryProgressTintList(), bar.getProgressBackgroundTintList(),
                     bar instanceof SeekBar ? ((SeekBar) bar).getThumbTintList() : null});

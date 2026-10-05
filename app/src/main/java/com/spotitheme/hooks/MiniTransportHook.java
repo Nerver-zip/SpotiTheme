@@ -49,13 +49,27 @@ public final class MiniTransportHook {
         XposedHelpers.findAndHookMethod(ImageView.class, "onDraw", Canvas.class, new XC_MethodHook() {
             @Override protected void beforeHookedMethod(MethodHookParam param) {
                 ImageView view = (ImageView) param.thisObject;
-                if (!ViewScopes.miniAncestor(view)) return;
+                boolean mini = ViewScopes.miniAncestor(view);
+                boolean expanded = ViewScopes.expandedPlayer(view);
+                if (!mini && !expanded) return;
                 Drawable drawable = view.getDrawable();
                 if (drawable == null) return;
                 try {
                     if (!fixed()) { restore(drawable); return; }
                     View parent = view.getParent() instanceof View ? (View) view.getParent() : null;
-                    if (ViewScopes.resource(parent).equals("play_pause_button")) {
+                    String parentName = ViewScopes.resource(parent);
+                    if (expanded && parentName.equals("sticky_header_play_pause_button")) {
+                        if (drawable.getClass() != glyphColors.getDeclaringClass()) return;
+                        Paint paint = (Paint) glyphPaint.get(drawable);
+                        int original = paint.getColor();
+                        int role = runtime.snapshot().palette.color("text");
+                        param.setObjectExtra("spotitheme.transport.paint", paint);
+                        param.setObjectExtra("spotitheme.transport.color", original);
+                        paint.setColor((role & 0xFFFFFF) | (((original >>> 24) * (role >>> 24) / 255) << 24));
+                        return;
+                    }
+                    if ((mini && parentName.equals("play_pause_button"))
+                            || (expanded && parentName.equals("nowplaying_elements_playpause_button"))) {
                         if (drawable.getClass() == circleGlyph.getDeclaringClass()) {
                             Object glyph = circleGlyph.get(drawable);
                             if (!(glyph instanceof Drawable) || glyph.getClass() != glyphColors.getDeclaringClass()) return;
@@ -66,12 +80,21 @@ public final class MiniTransportHook {
                         }
                     } else if (drawable.getClass() == glyphColors.getDeclaringClass()) {
                         Object glyph = icon.get(drawable);
-                        if (!(glyph instanceof Enum) || !((Enum<?>) glyph).name().equals("SKIP_FORWARD")) return;
-                        int id = view.getResources().getIdentifier("np_content_desc_next", "string", "com.spotify.music");
+                        if (!(glyph instanceof Enum)) return;
+                        String name = ((Enum<?>) glyph).name();
+                        boolean previous = name.equals("SKIP_BACK") && expanded;
+                        if (!name.equals("SKIP_FORWARD") && !previous) return;
+                        if (!mini && !ViewScopes.ancestor(view, "playback_controls_container")) return;
+                        int id = view.getResources().getIdentifier(previous ? "np_content_desc_prev" : "np_content_desc_next", "string", "com.spotify.music");
                         if (id != 0 && android.text.TextUtils.equals(view.getContentDescription(), view.getResources().getString(id)))
                             apply(drawable, false, runtime.snapshot().palette.color("text"), true);
                     }
                 } catch (ReflectiveOperationException failure) { ModuleLog.error("Mini transport update failed", failure); }
+            }
+            @Override protected void afterHookedMethod(MethodHookParam param) {
+                Paint paint = (Paint) param.getObjectExtra("spotitheme.transport.paint");
+                Integer original = (Integer) param.getObjectExtra("spotitheme.transport.color");
+                if (paint != null && original != null) paint.setColor(original);
             }
         });
         runtime.addListener(() -> {
