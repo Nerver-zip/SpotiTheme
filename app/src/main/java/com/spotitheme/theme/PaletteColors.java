@@ -1,6 +1,17 @@
 package com.spotitheme.theme;
 
 public final class PaletteColors {
+    public static PaletteColors from(ThemePalette palette) {
+        String[] backgrounds = {"background", "surface", "tinted", "backgroundHighlight", "backgroundPress",
+                "surfaceHighlight", "surfacePress", "tintedHighlight", "tintedPress", "accent",
+                "accentHighlight", "accentPress", "decorativeSubdued"};
+        String[] foregrounds = {"text", "textSubdued", "accent", "onAccent", "decorative", "announcement",
+                "negative", "warning", "positive"};
+        int[] back = new int[backgrounds.length], fore = new int[foregrounds.length];
+        for (int i = 0; i < back.length; i++) back[i] = palette.color(backgrounds[i]);
+        for (int i = 0; i < fore.length; i++) fore[i] = palette.color(foregrounds[i]);
+        return new PaletteColors(back, fore);
+    }
     public final int[] backgrounds;
     public final int[] foregrounds;
 
