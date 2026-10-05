@@ -8,6 +8,6 @@ The mappings cover Encore layout/accessor/provider entry points, Material 3, Com
 
 Some historical source queries have no matching path in this pinned release: the four-parameter shortcut-card constructor, legacy Connect layout and legacy album-header layout. They must not trigger fallback scans. The modern paths have separate mappings.
 
-These identities were checked against declared methods and selected caller disassembly in the pinned APK. Identity verification does not establish visual behavior, successful hook installation or startup duration. Those require acceptance on the built module. The standalone hook engine is still being ported, and the under-50-ms main-thread startup requirement remains unproven.
+These identities were checked against declared methods and selected caller disassembly in the pinned APK. Identity verification does not establish visual behavior, successful hook installation or startup duration. Those require acceptance on the built module. The hook engine has executed under Vector injection, and representative surfaces are recorded in [MVP validation](MVP_VALIDATION.md). Some natural UI states and rootless execution remain unverified; startup measurements are informational, with no strict numeric delivery threshold.
 
 Do not update obfuscated names based on a similar signature alone. Verify the owner's semantics, callers, field shape and actual surface on the new APK, then repeat device acceptance.

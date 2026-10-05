@@ -42,6 +42,7 @@ import com.spotitheme.hooks.HomeShortcutTitleHook;
 import com.spotitheme.hooks.HomeCarouselTextHook;
 import com.spotitheme.hooks.NativeViewPaletteHook;
 import com.spotitheme.hooks.ActivityPaletteHook;
+import com.spotitheme.settings.SettingsBridge;
 import com.spotitheme.hooks.TrackArtworkHook;
 import com.spotitheme.theme.ArtworkThemeController;
 import com.spotitheme.hooks.NavigationGradientHook;
@@ -103,7 +104,7 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             Profile_9_1_86_2432 profile = new Profile_9_1_86_2432(info.versionName, code, loader);
             android.content.res.AssetManager assets = XModuleResources.createInstance(modulePath, null).getAssets();
             ThemePalette palette;
-            try (InputStream stream = assets.open("themes/catppuccin-mocha-mauve-bundled.json")) {
+            try (InputStream stream = assets.open("themes/Catppuccin Mocha.json")) {
                 palette = ThemePaletteParser.parse(stream);
             }
             runtime = new ThemeRuntime(palette, true, true);
@@ -169,6 +170,8 @@ public final class XposedLoader implements IXposedHookLoadPackage, IXposedHookIn
             new ActivityPaletteHook(runtime).install(application);
             artworkController = new ArtworkThemeController(runtime);
             new TrackArtworkHook(profile, artworkController::observe).install();
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                    new SettingsBridge(context, palette, artworkController).start());
             ModuleLog.info("Registration checkpoint=lifecycle-artwork elapsedMs="
                     + (StartupMetrics.start() - started) / 1_000_000.0);
             applyResources();

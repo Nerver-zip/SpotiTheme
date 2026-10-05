@@ -34,7 +34,7 @@ public final class ThemePaletteCatalog {
         List<String> errors = new ArrayList<>();
         Set<String> ids = new HashSet<>();
 
-        loadBundled(modulePath, entries, ids, errors);
+        loadBundled(context, modulePath, entries, ids, errors);
 
         String folderUri = preferences.getString(ThemePaletteStore.FOLDER_URI, null);
         if (folderUri != null) {
@@ -100,20 +100,17 @@ public final class ThemePaletteCatalog {
                 .putString(ThemePaletteStore.FOLDER_URI, uri.toString()).apply();
     }
 
-    private static void loadBundled(String modulePath, List<ThemeEntry> entries, Set<String> ids, List<String> errors) {
-        if (modulePath == null || modulePath.isEmpty()) {
-            errors.add("Built-in theme assets are unavailable");
-            return;
-        }
+    private static void loadBundled(Context context, String modulePath, List<ThemeEntry> entries, Set<String> ids, List<String> errors) {
         try {
-            XModuleResources resources = XModuleResources.createInstance(modulePath, null);
-            String[] names = resources.getAssets().list(ASSET_DIRECTORY);
+            android.content.res.AssetManager assets = modulePath == null || modulePath.isEmpty()
+                    ? context.getAssets() : XModuleResources.createInstance(modulePath, null).getAssets();
+            String[] names = assets.list(ASSET_DIRECTORY);
             if (names == null) return;
             Arrays.sort(names, Comparator.comparing((String name) -> name.toLowerCase(Locale.ROOT))
                     .thenComparing(name -> name));
             for (String name : names) {
                 if (!name.toLowerCase(Locale.ROOT).endsWith(".json")) continue;
-                try (InputStream input = resources.getAssets().open(ASSET_DIRECTORY + "/" + name)) {
+                try (InputStream input = assets.open(ASSET_DIRECTORY + "/" + name)) {
                     add(input, name, Source.BUNDLED, null, entries, ids, errors);
                 } catch (Exception exception) {
                     errors.add(name + ": " + message(exception));

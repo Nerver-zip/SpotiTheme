@@ -50,8 +50,14 @@ public final class ThemePaletteStore {
 
     private ThemePaletteStore() {}
 
+    public static boolean isRetiredMochaMauveId(String id) {
+        return "bundled-catppuccin-mocha-mauve".equals(id)
+                || "catppuccin-mocha-mauve".equals(id);
+    }
+
     public static ThemePalette restoreSelected(SharedPreferences preferences) {
         String selectedId = preferences.getString(SELECTED_ID, null);
+        if (isRetiredMochaMauveId(selectedId)) return null;
         String cachedJson = preferences.getString(LAST_GOOD_JSON, null);
         if (selectedId == null || cachedJson == null) return null;
         try {
