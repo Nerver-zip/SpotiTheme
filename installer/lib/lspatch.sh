@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 verify_lspatch() {
     require_command java
+    require_command python3
+    require_command keytool
     if [[ -z "${APKSIGNER:-}" ]]; then
         if command -v apksigner >/dev/null; then APKSIGNER="$(command -v apksigner)";
         else
@@ -52,15 +54,20 @@ validate_patched() {
     say "All patched APK signatures verified for device API $sdk with one certificate."
 }
 
-# LSPatch requires password arguments; never enable shell tracing around this call.
+# Never enable shell tracing around LSPatch signing.
+# LSPatch reads each input APK's signature. Modify the original base manifest,
+# then sign the staged split set with a disposable key before LSPatch re-signs it.
+# The generated keystore/password are kept under /tmp and removed after patching.
 patch_split_set() {
-    local -a signing=()
+    local -a signing=() staged_inputs=() patch_inputs=()
     local store_password="" alias_password="" alias=""
+    local input staged output temporary_signing_dir password_file key_password_file
+    local base_count=0
     if [[ -n "${SPOTITHEME_KEYSTORE:-}" ]]; then
         [[ -f "$SPOTITHEME_KEYSTORE" ]] || die 'Custom signing keystore does not exist.'
         alias="${SPOTITHEME_KEY_ALIAS:-}"
         [[ -n "$alias" ]] || die 'Set SPOTITHEME_KEY_ALIAS with SPOTITHEME_KEYSTORE.'
-        # Reading interactively avoids storing credentials in environment variables.
+        # Reading interactively avoids storing final signing credentials in the environment.
         [[ "$-" != *x* ]] || die 'Disable shell tracing before custom signing.'
         read -r -s -p 'Keystore password: ' store_password
         printf '\n'
@@ -68,5 +75,50 @@ patch_split_set() {
         printf '\n'
         signing=(-k "$SPOTITHEME_KEYSTORE" "$store_password" "$alias" "$alias_password")
     fi
-    java -jar "$INSTALLER/vendor/lspatch.jar" "${INPUT_APKS[@]}" -l 2 -m "$MODULE_APK"         "${signing[@]}" -o "$WORK/patched"
+    [[ "$-" != *x* ]] || die 'Disable shell tracing before temporary APK signing.'
+
+    mkdir -p "$WORK/staged" "$WORK/lspatch-input"
+    for input in "${INPUT_APKS[@]}"; do
+        staged="$WORK/staged/${input##*/}"
+        if [[ "${input##*/}" == base.apk ]]; then
+            python3 "$INSTALLER/lib/patch_provider_queries.py" "$input" "$staged" || die 'Could not add the narrow SpotiTheme provider visibility query.'
+            base_count=$((base_count + 1))
+        else
+            cp "$input" "$staged"
+        fi
+        staged_inputs+=("$staged")
+    done
+    [[ "$base_count" == 1 ]] || die 'Expected exactly one Spotify base APK to stage.'
+
+    temporary_signing_dir="$(mktemp -d "${TMPDIR:-/tmp}/spottheme-lspatch-signing.XXXXXX")"
+    password_file="$temporary_signing_dir/keystore-password"
+    key_password_file="$temporary_signing_dir/key-password"
+    python3 -c 'import secrets; print(secrets.token_urlsafe(32))' > "$password_file"
+    cp "$password_file" "$key_password_file"
+    chmod 600 "$password_file" "$key_password_file"
+    if ! keytool -genkeypair -keystore "$temporary_signing_dir/input.jks" \
+            -storepass:file "$password_file" -keypass:file "$password_file" \
+            -alias spotitheme-staging -keyalg RSA -keysize 2048 -validity 3650 \
+            -dname 'CN=SpotiTheme temporary LSPatch input'; then
+        rm -rf "$temporary_signing_dir"
+        die 'Could not create a temporary signing key for LSPatch input staging.'
+    fi
+
+    for input in "${staged_inputs[@]}"; do
+        output="$WORK/lspatch-input/${input##*/}"
+        if ! "$APKSIGNER" sign --ks "$temporary_signing_dir/input.jks" \
+                --ks-key-alias spotitheme-staging --ks-pass "file:$password_file" \
+                --key-pass "file:$key_password_file" --out "$output" "$input"; then
+            rm -rf "$temporary_signing_dir"
+            die "Could not sign staged LSPatch input: ${input##*/}"
+        fi
+        patch_inputs+=("$output")
+    done
+
+    if ! java -jar "$INSTALLER/vendor/lspatch.jar" "${patch_inputs[@]}" -l 2 -m "$MODULE_APK" \
+            "${signing[@]}" -o "$WORK/patched"; then
+        rm -rf "$temporary_signing_dir"
+        die 'LSPatch failed to prepare the split set.'
+    fi
+    rm -rf "$temporary_signing_dir"
 }

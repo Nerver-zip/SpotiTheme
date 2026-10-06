@@ -24,7 +24,7 @@ The installer pulls all APKs returned by `pm path`, preserving the base and conf
 
 The original and patched APKs remain available for review. Only after successful patch preparation, split-count validation and verification that every APK has a valid signature for the connected device API and the same signer certificate does the installer ask permission to replace Spotify. **Replacing a store-signed application deletes its local data and requires signing in again.** A cancellation preserves the prepared files and leaves Spotify installed. An installation failure preserves originals for recovery using `adb install-multiple` with the entire original split set.
 
-The module manager APK is installed separately so themes can be configured. Rootless runtime settings synchronization, signature handling and rendering must be accepted on an isolated rootless device; successful APK patching alone does not establish those results. Do not enable a second root framework for the same patched target.
+The module manager APK is installed separately so themes can be configured. Rootless preparation adds only the narrow provider-authority query for `com.spotitheme.settings`; it does not add `QUERY_ALL_PACKAGES`. On the Android 16 test handset, the same-signer split set updated in place, manager-selected Latte reached Spotify's hook, and Spotify remained outside Vector scope. The handset still has Magisk, so repeat acceptance on a separate truly-unrooted device. Do not enable a second root framework for the same patched target.
 
 The vendored patcher uses its built-in signing key by default. To use your own key:
 

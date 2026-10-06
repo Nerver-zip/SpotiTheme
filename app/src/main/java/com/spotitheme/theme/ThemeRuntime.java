@@ -12,11 +12,14 @@ public final class ThemeRuntime {
         public final ThemePalette palette;
         public final boolean enabled;
         public final boolean fixed;
+        public final boolean showArtworkBackdrop;
         public final long generation;
-        private Snapshot(ThemePalette palette, boolean enabled, boolean fixed, long generation) {
+        private Snapshot(ThemePalette palette, boolean enabled, boolean fixed,
+                boolean showArtworkBackdrop, long generation) {
             this.palette = palette;
             this.enabled = enabled;
             this.fixed = fixed;
+            this.showArtworkBackdrop = showArtworkBackdrop;
             this.generation = generation;
         }
     }
@@ -29,7 +32,7 @@ public final class ThemeRuntime {
 
     public ThemeRuntime(ThemePalette palette, boolean enabled, boolean fixed) {
         if (palette == null) throw new IllegalArgumentException("A validated palette is required");
-        snapshot = new Snapshot(palette, enabled, fixed, 0);
+        snapshot = new Snapshot(palette, enabled, fixed, false, 0);
     }
 
     public Snapshot snapshot() { return snapshot; }
@@ -43,13 +46,15 @@ public final class ThemeRuntime {
         return false;
     }
 
-    public void apply(ThemePalette palette, boolean enabled, boolean fixed) {
+    public void apply(ThemePalette palette, boolean enabled, boolean fixed,
+            boolean showArtworkBackdrop) {
         if (palette == null) throw new IllegalArgumentException("A validated palette is required");
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            main.post(() -> apply(palette, enabled, fixed));
+            main.post(() -> apply(palette, enabled, fixed, showArtworkBackdrop));
             return;
         }
-        snapshot = new Snapshot(palette, enabled, fixed, snapshot.generation + 1);
+        snapshot = new Snapshot(palette, enabled, fixed, showArtworkBackdrop,
+                snapshot.generation + 1);
         for (Runnable listener : listeners) listener.run();
     }
 }

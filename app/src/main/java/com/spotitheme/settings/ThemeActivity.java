@@ -39,6 +39,11 @@ public final class ThemeActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs = ThemePreferences.open(this);
+        if (prefs.getBoolean(ThemePaletteStore.FIXED_MODE, true)
+                && prefs.getBoolean(SettingsProvider.AUTO, false)) {
+            prefs.edit().putBoolean(SettingsProvider.AUTO, false).apply();
+            SettingsProvider.notifyChanged(this);
+        }
         boolean retiredMochaMauve = ThemePaletteStore.isRetiredMochaMauveId(
                 prefs.getString(ThemePaletteStore.SELECTED_ID, null));
         palette = retiredMochaMauve ? null : ThemePaletteStore.restoreSelected(prefs);
@@ -126,7 +131,9 @@ public final class ThemeActivity extends Activity {
                         .setMessage(String.join("\n", catalog.errors)).setPositiveButton("OK", null).show());
         toggle("Enable theme", SettingsProvider.ENABLED, true, false, true);
         toggle("Use album artwork colors", ThemePaletteStore.FIXED_MODE, true, true, true);
-        boolean artwork = !prefs.getBoolean(ThemePaletteStore.FIXED_MODE, true);
+        toggle("Show Spotify artwork blur", SettingsProvider.SHOW_ARTWORK_BACKDROP, false, false, true);
+        boolean fixedPalette = prefs.getBoolean(ThemePaletteStore.FIXED_MODE, true);
+        boolean artwork = !fixedPalette;
         toggle("Auto Theme", SettingsProvider.AUTO, false, false, artwork);
         label("Artwork palette", 18, "text");
         String[] modes = {"neutral", "light", "dark"};
@@ -154,7 +161,11 @@ public final class ThemeActivity extends Activity {
         control.setTrackTintList(controlColors("accentPress", "surface", "surfaceHighlight"));
         content.addView(control, new LinearLayout.LayoutParams(-1, -2));
         control.setOnCheckedChangeListener((button, checked) -> {
-            prefs.edit().putBoolean(key, checked != inverse).apply();
+            boolean value = checked != inverse;
+            SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
+            if (ThemePaletteStore.FIXED_MODE.equals(key) && value)
+                editor.putBoolean(SettingsProvider.AUTO, false);
+            editor.apply();
             SettingsProvider.notifyChanged(this);
             if (ThemePaletteStore.FIXED_MODE.equals(key)) render();
         });

@@ -61,8 +61,12 @@ public final class SettingsBridge {
                 json = new com.google.gson.Gson().toJson(ThemePaletteStore.legacyPalette(shared).toJsonObject());
             state.putString("palette", json);
             state.putBoolean(SettingsProvider.ENABLED, shared.getBoolean(SettingsProvider.ENABLED, true));
-            state.putBoolean(ThemePaletteStore.FIXED_MODE, shared.getBoolean(ThemePaletteStore.FIXED_MODE, true));
-            state.putBoolean(SettingsProvider.AUTO, shared.getBoolean(SettingsProvider.AUTO, false));
+            boolean fixedPalette = shared.getBoolean(ThemePaletteStore.FIXED_MODE, true);
+            state.putBoolean(ThemePaletteStore.FIXED_MODE, fixedPalette);
+            state.putBoolean(SettingsProvider.AUTO, com.spotitheme.theme.ArtworkModePolicy.autoThemeEnabled(
+                    fixedPalette, shared.getBoolean(SettingsProvider.AUTO, false)));
+            state.putBoolean(SettingsProvider.SHOW_ARTWORK_BACKDROP,
+                    shared.getBoolean(SettingsProvider.SHOW_ARTWORK_BACKDROP, false));
             state.putString(SettingsProvider.MODE, shared.getString(SettingsProvider.MODE, "neutral"));
             apply(state);
         } catch (RuntimeException failure) { ModuleLog.error("Shared settings reload failed", failure); }
@@ -80,8 +84,11 @@ public final class SettingsBridge {
             ThemePalette palette = json == null ? fallback : ThemePaletteParser.parse(json);
             if (ThemePaletteStore.isRetiredMochaMauveId(palette.getId())) palette = fallback;
             ModuleLog.info("Settings snapshot received; palette=" + palette.getId());
-            controller.configure(palette, state.getBoolean(SettingsProvider.ENABLED, true),
-                    state.getBoolean(ThemePaletteStore.FIXED_MODE, true), state.getBoolean(SettingsProvider.AUTO, false),
+            boolean fixedPalette = state.getBoolean(ThemePaletteStore.FIXED_MODE, true);
+            controller.configure(palette, state.getBoolean(SettingsProvider.ENABLED, true), fixedPalette,
+                    com.spotitheme.theme.ArtworkModePolicy.autoThemeEnabled(
+                            fixedPalette, state.getBoolean(SettingsProvider.AUTO, false)),
+                    state.getBoolean(SettingsProvider.SHOW_ARTWORK_BACKDROP, false),
                     state.getString(SettingsProvider.MODE, "neutral"));
         } catch (Exception failure) { ModuleLog.error("Settings snapshot rejected; current palette retained", failure); }
     }
