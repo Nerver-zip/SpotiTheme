@@ -196,91 +196,33 @@ Clone or open this repository, then use the interactive installer from its root:
 
 The installer refuses other Spotify versions rather than upgrading or downgrading the app. It does not start playback. See <a href="installer/README.md">the installation guide</a> for prerequisites, prompts, signing details, and recovery behavior.
 
-### Manual setup (without the installer)
+### Manual installation through the phone UI
 
-The interactive installer is optional. The steps below perform the same setup manually. Use Bash for the rootless commands. If more than one device is connected, add <code>-s &lt;serial&gt;</code> after each <code>adb</code> command.
-
-First confirm the connected device and pinned Spotify build, then build the manager/module APK:
-
-<pre><code>adb devices -l
-adb shell dumpsys package com.spotify.music | grep -E 'versionName=|versionCode='
-./gradlew testDebugUnitTest assembleDebug</code></pre>
-
-The package details must report Spotify <strong>9.1.86.2432 / 146555520</strong>. Stop if the installed build differs; this module does not discover profiles for other Spotify versions. The APK used below is <code>app/build/outputs/apk/debug/app-debug.apk</code>.
+These steps use Android screens and Vector, with no terminal or ADB commands. Start with a built <strong>SpotiTheme APK</strong> copied to your phone. Building from source is a separate developer task; the source repository itself is not an installable APK. Spotify must already be the supported <strong>9.1.86.2432 / 146555520</strong> build. Check its version in Android <strong>Settings → Apps → Spotify</strong>; stop if it differs.
 
 #### Rooted device with Vector
 
-Requirements: Magisk with Zygisk enabled, Vector installed and operational, and its CLI at <code>/data/adb/lspd/cli</code>. Install the APK, enable the module, and add only Spotify user 0 to its scope:
+1. Ensure Magisk has Zygisk enabled and Vector is operational. If Vector is not installed, download its module from the <a href="https://github.com/JingMatrix/Vector/releases">official releases</a>, open <strong>Magisk → Modules → Install from storage</strong>, select the module ZIP and reboot. Follow <a href="https://github.com/JingMatrix/Vector#installation">Vector's installation instructions</a> for the Zygisk environment required by your setup.
+2. Open the SpotiTheme APK in your file manager and tap <strong>Install</strong>. If Android asks, allow that file manager to install unknown apps. SpotiTheme is an APK, not a Magisk module ZIP.
+3. Open <strong>Vector</strong> from its manager shortcut or system notification. Go to <strong>Modules → SpotiTheme</strong> and enable the module.
+4. In SpotiTheme's scope, select <strong>Spotify (com.spotify.music)</strong> for the Android user where it is installed. This project's validated setup uses the primary user (user 0). Do not select unrelated apps or system processes.
+5. If another theming module targets Spotify, open that module's scope and uncheck only Spotify to avoid competing hooks.
+6. Open Android <strong>Settings → Apps → Spotify → Force stop</strong>, then launch Spotify again. Removing it from Recents alone does not reliably reload hooks. Do not clear its storage or uninstall it.
+7. Open <strong>SpotiTheme</strong> from the launcher and configure the theme as described below.
 
-<pre><code>adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb shell su -c '/data/adb/lspd/cli status'
-adb shell su -c '/data/adb/lspd/cli modules enable com.spotitheme'
-adb shell su -c '/data/adb/lspd/cli scope add com.spotitheme com.spotify.music/0'
-adb shell su -c '/data/adb/lspd/cli modules --json ls'
-adb shell su -c '/data/adb/lspd/cli scope --json ls com.spotitheme'</code></pre>
+The Vector CLI and USB debugging are not required for this route. Installing an updated SpotiTheme APK with the same signing key follows the same Android installation flow; force-stop and reopen Spotify afterward.
 
-Confirm that Vector reports <code>com.spotitheme</code> enabled and <code>com.spotify.music/0</code> in its scope. You can perform the same actions in Vector’s UI under its module and scope controls. If another theming module also targets Spotify, remove only that module’s Spotify scope in Vector before acceptance; do not disable or remove the other module globally. Restart Spotify after changing scope so the running process loads the configured hooks.
+#### Rootless device
 
-#### Rootless device with LSPatch
+<a href="https://github.com/JingMatrix/LSPatch#usage">LSPatch provides a manager UI</a> that can patch and install apps without a terminal. However, an end-to-end SpotiTheme installation through that UI has <strong>not been validated</strong>. The supported rootless preparation currently uses this project's installer: it adds the settings-provider visibility query, embeds SpotiTheme, preserves all Spotify splits and verifies their signatures. We have not established an equivalent GUI-only preparation flow for these steps. Installing only the SpotiTheme APK does not inject hooks into an unpatched Spotify app.
 
-> [!WARNING]
-> Replacing the store-signed Spotify app with its first LSPatch build requires uninstalling Spotify. Android deletes its local app data, and you will need to sign in again. Preserve the original APK splits before continuing. Later updates can use `adb install-multiple -r` when both patched builds use the same LSPatch signing key. The test handset has Magisk; a separate truly-unrooted device test remains open.
+For rootless setup, use <code>./installer/install.sh --rootless</code> from the <a href="#installation">regular installation instructions</a> and follow the <a href="installer/README.md">installation guide</a>. Replacing the store-signed Spotify app requires uninstalling it, deletes local Spotify data and requires signing in again. Keep the original APK split backup for recovery. A separate truly-unrooted-device validation also remains open.
 
-Build the manager APK as above. These manual commands use the installer's preparation helpers to preserve every split, add only SpotiTheme's provider-authority visibility query, stage and sign the changed set, run the pinned LSPatch build, and verify all patched signatures for the connected Android API. For a later rebuild, set <code>SPOTIFY_ORIGINAL_DIR</code> to the saved store-signed splits from the first preparation; do not patch the already-patched Spotify splits again. Continue in the same Bash session:
+#### Choose a theme and check the result
 
-<pre><code>set -euo pipefail
-REPO="$PWD"
-INSTALLER="$REPO/installer"
-for library in ui adb spotify vector lspatch; do source "$INSTALLER/lib/$library.sh"; done
-select_device
-verify_spotify
-verify_lspatch
-MODULE_APK="$REPO/app/build/outputs/apk/debug/app-debug.apk"
-mkdir -p "$REPO/.project"
-WORK="$(mktemp -d "$REPO/.project/manual-lspatch.XXXXXX")"
-if [[ -n "${SPOTIFY_ORIGINAL_DIR:-}" ]]; then
-  mkdir -p "$WORK/original"
-  cp "$SPOTIFY_ORIGINAL_DIR"/*.apk "$WORK/original/"
-  INPUT_APKS=("$WORK/original/base.apk")
-  for apk in "$WORK"/original/*.apk; do
-    [[ "$apk" == "$WORK/original/base.apk" ]] || INPUT_APKS+=("$apk")
-  done
-else
-  extract_spotify
-fi
-mkdir -p "$WORK/patched"
-patch_split_set
-mapfile -t PATCHED_APKS < <(find "$WORK/patched" -maxdepth 1 -type f -name '*.apk' | sort)
-[[ ${#PATCHED_APKS[@]} -eq ${#INPUT_APKS[@]} ]]
-validate_patched "${PATCHED_APKS[@]}"
-adb_device install -r "$MODULE_APK"</code></pre>
+Open <strong>SpotiTheme</strong>, choose a theme and leave <strong>Enable theme</strong> on. For a fixed palette, leave <strong>Use album artwork colors</strong> off; Auto Theme is then unchecked and disabled. Player backdrop handling is automatic and has no switch. To import JSON themes, tap <strong>Choose theme folder</strong>, select the folder, grant read access and tap <strong>Refresh themes</strong> after changing its files.
 
-For an existing LSPatch install made with the same signing key, update Spotify in place and keep its data:
-
-<pre><code>adb -s "$SERIAL" install-multiple -r "${PATCHED_APKS[@]}"</code></pre>
-
-For the first install replacing the store-signed app, review the warning above, then uninstall before installing the patched set. This deletes local Spotify data:
-
-<pre><code>adb -s "$SERIAL" uninstall --user 0 com.spotify.music
-adb -s "$SERIAL" install-multiple "${PATCHED_APKS[@]}"</code></pre>
-
-The original split APKs remain under <code>$WORK/original</code> for recovery. If installation fails, restore them with <code>adb -s "$SERIAL" install-multiple "$WORK"/original/*.apk</code>. Continue to use the same LSPatch signing key for later updates; see <a href="installer/README.md">the installation guide</a> before using a custom keystore.
-
-#### Configure the theme and verify startup
-
-Open <strong>SpotiTheme</strong> from the launcher (or run <code>adb shell monkey -p com.spotitheme 1</code>). Choose a palette in the theme list and leave <strong>Enable theme</strong> on. For a fixed palette, leave <strong>Use album artwork colors</strong> off; Auto Theme is then cleared and disabled. Player backdrop handling is automatic and has no switch. To import JSON themes, choose the folder containing them and refresh the list. Restart Spotify after installing a changed hook build:
-
-<pre><code>adb shell am force-stop com.spotify.music
-adb shell monkey -p com.spotify.music 1</code></pre>
-
-For a startup diagnostic, clear the log before launching Spotify and inspect the module tag afterward:
-
-<pre><code>adb logcat -c
-adb shell am force-stop com.spotify.music
-adb shell monkey -p com.spotify.music 1
-adb logcat -d -v threadtime -s SpotiTheme</code></pre>
-
-Look for <code>Module initialized in Spotify</code> and <code>Base palette hook executed</code>, then verify the palette on Spotify surfaces visually. Logs confirm initialization, not complete surface coverage. See <a href="docs/MVP_VALIDATION.md">MVP validation</a> for known acceptance limits.
+Open Spotify and check Home and the expanded player visually. If a newly installed module is not taking effect, use Android <strong>Settings → Apps → Spotify → Force stop</strong> and reopen it. On the rooted route, also confirm SpotiTheme is enabled and Spotify is selected in Vector's scope. See <a href="docs/MVP_VALIDATION.md">MVP validation</a> for supported surfaces and remaining limits.
 
 ### Build and validate
 

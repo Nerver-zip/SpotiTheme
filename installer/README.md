@@ -8,6 +8,8 @@ Run from the repository root:
 ./installer/install.sh --rootless
 ```
 
+For a rooted installation using only Android and Vector screens, see [Manual installation through the phone UI](../README.md#manual-installation-through-the-phone-ui). The commands in this guide describe the host-based installer; a GUI-only SpotiTheme rootless preparation flow has not been validated.
+
 The default mode detects root. `--check` only checks the device, Spotify identity and selected framework/tool prerequisites. It does not build, install or change scope. Set `SPOTITHEME_SERIAL` when multiple devices are connected.
 
 Requirements: Bash, ADB, Python 3, a JDK compatible with the Gradle build, and the configured Android SDK. Rootless preparation also requires Android SDK `apksigner`; set `APKSIGNER` if it is not found in the SDK or on PATH. The module only supports Spotify **9.1.86.2432 / 146555520**, user 0. The installer refuses other versions rather than upgrading or downgrading Spotify.
