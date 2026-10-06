@@ -1,6 +1,7 @@
 package com.spotitheme.hooks;
 
 import android.graphics.BlendMode;
+import android.os.Build;
 import android.view.View;
 import com.spotitheme.ModuleLog;
 import com.spotitheme.profile.Profile_9_1_86_2432;
@@ -28,6 +29,8 @@ public final class SongDnaHook {
         variant = profile.field("songDna.contentVariant");
         tint = (Constructor<?>) profile.resolve("songDna.tintConstructor");
         color = (Constructor<?>) profile.resolve("compose.colorConstructor");
+        if (Build.VERSION.SDK_INT < 29)
+            throw new IllegalStateException("SongDNA tint requires Android 10 or newer");
         if (method("compose.blendMode").invoke(null, 5) != BlendMode.SRC_IN)
             throw new IllegalStateException("Unsupported SongDNA tint mode");
     }

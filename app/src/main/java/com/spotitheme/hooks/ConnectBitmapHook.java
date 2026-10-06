@@ -88,6 +88,7 @@ public final class ConnectBitmapHook {
     }
 
     private void tint(XC_MethodHook.MethodHookParam param, int index) {
+        if (Build.VERSION.SDK_INT < 29) return;
         ThemeRuntime.Snapshot state = runtime.snapshot();
         if (!state.enabled || drawHost.get() == null || !(param.args[index] instanceof Paint)) return;
         Paint original = (Paint) param.args[index];
