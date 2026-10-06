@@ -29,7 +29,12 @@ fi
 say "Install mode: $MODE"
 [[ "$CHECK_ONLY" == 0 ]] || exit 0
 mkdir -p "$REPO/.project"
-(cd "$REPO" && ./gradlew testDebugUnitTest assembleDebug)
-MODULE_APK="$REPO/app/build/outputs/apk/debug/app-debug.apk"
+if [[ -n "${SPOTITHEME_MODULE_APK:-}" ]]; then
+    MODULE_APK="$SPOTITHEME_MODULE_APK"
+    say "Using prebuilt module APK: $MODULE_APK"
+else
+    (cd "$REPO" && ./gradlew testDebugUnitTest assembleDebug)
+    MODULE_APK="$REPO/app/build/outputs/apk/debug/app-debug.apk"
+fi
 [[ -s "$MODULE_APK" ]] || die 'Build did not produce the module APK.'
 if [[ "$MODE" == root ]]; then install_root; else install_rootless; fi
