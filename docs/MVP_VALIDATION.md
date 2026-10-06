@@ -1,36 +1,40 @@
 # MVP validation status
 
-Updated 2026-10-06. The latest manager/module APK SHA-256 is `6070e2217c98a243f9d836e295a1d62b61437bb997715e3d8d0f74e1d1cb3073`. This is a development checkpoint, not a frozen MVP acceptance build.
+Updated 2026-10-06. Clean manager/module SHA-256: 09f737f5a4233a2384bb8d6c57e767c63655e9766c36baecd2072fd781611878. This document separates confirmed behavior from remaining device coverage.
 
-## Scope
+## Scope and behavior
 
-- Pinned target: Spotify `9.1.86.2432` / version code `146555520`.
-- Device validation: Android 16 / API 36, Magisk with Zygisk, JingMatrix/Vector.
-- Theme state: Catppuccin Latte selected for the README player capture; theme enabled; album artwork colors off; Auto Theme off and disabled; Show Spotify artwork blur off.
-- Catalog: 29 bundled themes. Regular Catppuccin Mocha is the only bundled Mocha variant. Saved selections using either retired Mocha Mauve ID fall back to regular Catppuccin Mocha.
-- Animated artwork backgrounds and their motion, drift, blur/frosted and quality controls are excluded. Spotify's native blurred artwork layer has a separate switch and does not affect Auto Theme or palette colors.
+- Pinned target: Spotify 9.1.86.2432 / version code 146555520, Android 16 / API 36.
+- Rootless injection uses LSPatch on a Magisk handset with Spotify outside Vector scope. A truly unrooted handset remains untested.
+- The catalog contains 29 themes. The test palette is Catppuccin Latte, with fixed palette enabled and Auto Theme off.
+- Confirmed square-cover artwork receives a flat theme background behind the image and no native overlay gradient. Foreground artwork is preserved.
+- Confirmed ready featured-video surfaces retain Spotify's native backdrop treatment. Unknown or unready media passes through unchanged.
+- The manual artwork-backdrop toggle has been removed. Its old stored key is ignored; preferences are not deleted. Auto Theme and Use album artwork colors remain independent.
 
-## Build and device evidence
+## Confirmed renderer evidence
 
-- `./gradlew testDebugUnitTest assembleDebug`: passed; 53 unit tests, no failures.
-- `python3 -m unittest discover -s installer/tests -v`: passed; 7 tests. `bash -n installer/install.sh installer/lib/*.sh` and `git diff --check` also passed.
-- A clean rootless startup logged `Module initialized in Spotify`, `Settings snapshot received; palette=catppuccin-latte`, `Base palette hook executed; palette=catppuccin-latte`, and `Artwork mode configured; enabled=true fixed=true auto=false showArtworkBackdrop=false`. No `Auto Theme palette applied` record appeared; Spotify remained in `MainActivity` with its media session paused.
-- The final rootless APK set was prepared from the pinned store-signed split backup, whose SHA-256 records verified before build. All four LSPatch splits passed API 36 signer verification, and their signer matched the installed patch. `adb install-multiple -r` updated Spotify in place without uninstalling it or deleting app data. The patched base manifest contains the narrow `com.spotitheme.settings` provider query and does not request `QUERY_ALL_PACKAGES`.
-- UIAutomator confirmed `Use album artwork colors=false`, `Auto Theme=false` and disabled, and `Show Spotify artwork blur=false`. Turning only the blur switch on produced `fixed=true auto=false showArtworkBackdrop=true` at runtime; turning it back off restored `showArtworkBackdrop=false`. The selected Latte palette remained unchanged. Runtime mode and UI behavior passed; a fresh visual A/B of both backdrop states in the expanded player remains open.
-- The new Latte player screenshot replaces the previous artwork-dominated capture with a genuine device capture of the fixed-palette player while the blur layer was hidden. The gray Spotify player gradient remains visible, so the screenshot is evidence of the current rendered surface, not proof that every expanded-player background color matches Latte.
-- The device still has Magisk, but Spotify was removed from Vector scope for this LSPatch run. This validates rootless injection and manager-to-provider palette switching on the test handset, not a separate truly-unrooted device.
+The pinned OverlayHidingGradientBackgroundView constructor stores the same GradientDrawable in its R0 field and its actual View background. The previous hook replaced only R0: runtime inspection showed a themed field alongside the original gray/black View background. The new hook synchronizes both references and restores native state for video or unknown media. Broad backgrounds on the player page and controls roots have been removed.
 
-## Remaining acceptance limits
+Still-artwork classification requires the pinned square-cover layout's music_container, cover_art_container and decoded image bitmap inside the active track carousel. Video classification requires its actual VideoSurfaceView with a shown, ready SurfaceView or TextureView. Playback state and generic image/video names are not classification evidence. Lower-page video cards are excluded.
 
-- A separate truly-unrooted-device run remains outstanding.
-- **Open regression:** expanded-player artwork is visible with Show Spotify artwork blur enabled, but the user confirms it disappears with the switch disabled. The current hook paints a solid background on the expanded root `content` in that state. The blur-specific resource target has not been observed on the pinned layout. Remove the root override and identify the actual blur renderer before claiming visual acceptance; preserve foreground artwork, Canvas and video. Spotify's native gray gradient and light-theme contrast also remain unaccepted.
-- No suitable related-video overflow card appeared in the tested track, so the SpotiTheme build has no fresh positive visual sample for that surface.
-- Selected Repeat and a positive queued-badge sample were unavailable. The cold-start media session reported Repeat off; that does not validate its selected state.
-- A natural active Spotify Connect state was visible in an earlier build's Home capture: Spotify displayed `Spotifast` alongside its laptop glyph while the media session reported `PLAYING`. Android MediaRouter2 still reported its default phone route, so this validates Spotify's in-app Connect indicator, not system-level route ownership; the icon was not re-captured after this update.
-- Coverage is specific to Spotify `9.1.86.2432` on the tested Android 16/Vector setup. It does not establish compatibility with other Spotify builds, Android versions, or every renderer/state.
+The separate blurred_background_image_view resource was not observed in this player. Full-screen Canvas/image paths without the confirmed square-cover binding remain unknown; this change does not claim a universal blur-renderer mapping.
 
-Earlier screens and device logs remain private under `.project/porting/evidence/2026-10-05/`; rootless test evidence remains private under `.project/rootless-test.Ju0SMB/`. These ignored artifacts are intentionally not part of the repository.
+## Build and visual checks
 
-## Latest artwork checkpoint
+- Clean Android build and 53 unit tests passed with Temurin JDK 21. Seven installer tests, shell syntax and diff whitespace checks also passed.
+- All 109 declared profile method targets matched the saved pinned-APK method inventory.
+- On the product candidate, the static cover remained pixel-identical in the compared artwork region. Its background sampled #EFF1F5, the selected Latte background.
+- Reopening Spotify reproduced STILL_ARTWORK with nativeBackdrop=false and visible artwork.
+- The Gladiator movie clip remained visible with FEATURED_VIDEO and nativeBackdrop=true on the product candidate.
+- An orientation request and return preserved artwork, but Spotify kept this expanded-player screen in portrait. This is not landscape acceptance.
+- Same-signer, in-place rootless updates preserve login and application data. All four splits passed combined API 36 signature/certificate verification. The provider query remains narrow.
 
-The latest source was built with Temurin JDK 21; all 53 Android unit tests passed. Seven installer tests, shell syntax validation and diff whitespace checks passed. The module was embedded into the preserved pinned Spotify split set and installed as a same-signer in-place update. An expanded-player capture confirms foreground artwork with the blur switch enabled only. Earlier screenshots and runtime preference checks do not establish that disabling blur preserves artwork. No playback action is required for the next paused-track A/B check.
+## Remaining coverage
+
+- The clean rootless artifact was installed in place. Final static-cover and featured-video captures passed. The manager visually confirms the retired toggle is absent; Latte, fixed mode and Auto Theme off remain selected.
+- Truly unrooted hardware and actual landscape player rendering remain unvalidated.
+- Unconfirmed Canvas/full-screen image layouts intentionally retain native rendering.
+- Selected Repeat, a positive queued badge and a suitable related-video overflow sample remain unavailable. Active Connect was observed in-app; it does not establish Android system-route ownership.
+- Coverage is limited to the pinned Spotify build and tested Android environment.
+
+Diagnostic screenshots, logs and artifact hashes are kept in the ignored .project directory.

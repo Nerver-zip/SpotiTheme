@@ -24,7 +24,7 @@ public final class ArtworkThemeController {
     });
     private final ArtworkRequestGate gate = new ArtworkRequestGate();
     private ThemePalette selected;
-    private boolean active, auto, showArtworkBackdrop;
+    private boolean active, auto;
     private String mode = "neutral", artwork;
     private Integer fallback;
     private Future<?> pending;
@@ -34,8 +34,7 @@ public final class ArtworkThemeController {
         selected = runtime.snapshot().palette;
     }
 
-    public void configure(ThemePalette palette, boolean enabled, boolean fixed, boolean auto,
-            boolean showArtworkBackdrop, String mode) {
+    public void configure(ThemePalette palette, boolean enabled, boolean fixed, boolean auto, String mode) {
         if (palette == null || !("light".equals(mode) || "dark".equals(mode) || "neutral".equals(mode)))
             throw new IllegalArgumentException("A valid palette and artwork mode are required");
         main.post(() -> {
@@ -44,11 +43,10 @@ public final class ArtworkThemeController {
             selected = palette;
             this.mode = mode;
             this.auto = ArtworkModePolicy.autoThemeEnabled(fixed, auto);
-            this.showArtworkBackdrop = showArtworkBackdrop;
             active = enabled && this.auto;
             ModuleLog.info("Artwork mode configured; enabled=" + enabled + " fixed=" + fixed
-                    + " auto=" + this.auto + " showArtworkBackdrop=" + showArtworkBackdrop);
-            runtime.apply(palette, enabled, fixed, showArtworkBackdrop);
+                    + " auto=" + this.auto);
+            runtime.apply(palette, enabled, fixed, this.auto);
             if (active) request();
         });
     }
@@ -87,8 +85,7 @@ public final class ArtworkThemeController {
     private void publish(ArtworkRequestGate.Request request, int color) {
         gate.publish(request, () -> {
             if (active && auto) {
-                runtime.apply(ArtworkPaletteGenerator.generate(selected, color, mode), true, false,
-                        showArtworkBackdrop);
+                runtime.apply(ArtworkPaletteGenerator.generate(selected, color, mode), true, false, true);
                 ModuleLog.info("Auto Theme palette applied; color=" + Integer.toHexString(color) + " mode=" + mode);
             }
         });

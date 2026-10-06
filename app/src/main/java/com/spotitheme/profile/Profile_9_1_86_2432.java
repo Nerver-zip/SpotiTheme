@@ -95,6 +95,8 @@ public final class Profile_9_1_86_2432 {
         add(targets, "glyph.color", "Lp/bp51;->b(I)V");
         add(targets, "player.overlay", "Lcom/spotify/nowplaying/uiusecases/overlay/OverlayHidingGradientBackgroundView;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
         add(targets, "player.overlayColor", "Lcom/spotify/nowplaying/uiusecases/overlay/OverlayHidingGradientBackgroundView;->setColor(I)V");
+        add(targets, "player.videoSurface", "Lcom/spotify/betamax/player/VideoSurfaceView;->getSurfaceView()Landroid/view/SurfaceView;");
+        add(targets, "player.videoTexture", "Lcom/spotify/betamax/player/VideoSurfaceView;->getTextureView()Landroid/view/TextureView;");
         add(targets, "navigation.gradient", "Lcom/spotify/mainlayout/ui/view/gradient/MainLayoutGradientView;-><init>(Landroid/content/Context;Landroid/util/AttributeSet;)V");
         add(targets, "navigation.bottomColor", "Lcom/spotify/mainlayout/ui/view/gradient/MainLayoutGradientView;->setBottomColor(Ljava/lang/Integer;)V");
         add(targets, "album.header.artworkCallback", "Lp/drl;->t(Ljava/lang/Object;)V");

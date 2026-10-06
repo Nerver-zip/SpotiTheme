@@ -12,14 +12,13 @@ public final class ThemeRuntime {
         public final ThemePalette palette;
         public final boolean enabled;
         public final boolean fixed;
-        public final boolean showArtworkBackdrop;
+        public final boolean autoTheme;
         public final long generation;
-        private Snapshot(ThemePalette palette, boolean enabled, boolean fixed,
-                boolean showArtworkBackdrop, long generation) {
+        private Snapshot(ThemePalette palette, boolean enabled, boolean fixed, boolean autoTheme, long generation) {
             this.palette = palette;
             this.enabled = enabled;
             this.fixed = fixed;
-            this.showArtworkBackdrop = showArtworkBackdrop;
+            this.autoTheme = ArtworkModePolicy.autoThemeEnabled(fixed, autoTheme);
             this.generation = generation;
         }
     }
@@ -46,15 +45,13 @@ public final class ThemeRuntime {
         return false;
     }
 
-    public void apply(ThemePalette palette, boolean enabled, boolean fixed,
-            boolean showArtworkBackdrop) {
+    public void apply(ThemePalette palette, boolean enabled, boolean fixed, boolean autoTheme) {
         if (palette == null) throw new IllegalArgumentException("A validated palette is required");
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            main.post(() -> apply(palette, enabled, fixed, showArtworkBackdrop));
+            main.post(() -> apply(palette, enabled, fixed, autoTheme));
             return;
         }
-        snapshot = new Snapshot(palette, enabled, fixed, showArtworkBackdrop,
-                snapshot.generation + 1);
+        snapshot = new Snapshot(palette, enabled, fixed, autoTheme, snapshot.generation + 1);
         for (Runnable listener : listeners) listener.run();
     }
 }

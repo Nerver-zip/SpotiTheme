@@ -37,7 +37,7 @@ SpotiTheme applies semantic color palettes to supported Spotify Android surfaces
 - <strong>User themes:</strong> choose a folder with Android's document picker; refresh to import valid version-1 JSON palettes.
 - <strong>Two installation paths:</strong> Vector/Zygisk for rooted devices or a prepared LSPatch install for rootless devices.
 
-Animated artwork backgrounds and their dependent motion, drift, blur, and quality controls are excluded from this MVP. Spotify's native blurred artwork backdrop has its own setting; it does not enable Auto Theme or change the palette. Static Auto Theme color extraction remains available without adding an animated backdrop.
+Animated artwork backgrounds and their dependent motion, drift, blur, and quality controls are excluded from this MVP. The expanded player handles its backdrop automatically: confirmed square album artwork uses a clear theme background, while a confirmed featured-video surface keeps Spotify's native treatment. Unrecognized media paths keep native behavior. Static Auto Theme color extraction and Use album artwork colors remain separate color controls.
 
 The former built-in Mocha Mauve entry is not included. A saved selection using its retired identifier falls back to regular Catppuccin Mocha.
 
@@ -268,7 +268,7 @@ The original split APKs remain under <code>$WORK/original</code> for recovery. I
 
 #### Configure the theme and verify startup
 
-Open <strong>SpotiTheme</strong> from the launcher (or run <code>adb shell monkey -p com.spotitheme 1</code>). Choose a palette in the theme list and leave <strong>Enable theme</strong> on. For a fixed palette, leave <strong>Use album artwork colors</strong> off; Auto Theme is then cleared and disabled. <strong>Show Spotify artwork blur</strong> is independent: leave it off to hide Spotify's native blurred layer, or turn it on to restore that layer without enabling Auto Theme. To import JSON themes, choose the folder containing them and refresh the list. Restart Spotify after installing a changed hook build:
+Open <strong>SpotiTheme</strong> from the launcher (or run <code>adb shell monkey -p com.spotitheme 1</code>). Choose a palette in the theme list and leave <strong>Enable theme</strong> on. For a fixed palette, leave <strong>Use album artwork colors</strong> off; Auto Theme is then cleared and disabled. Player backdrop handling is automatic and has no switch. To import JSON themes, choose the folder containing them and refresh the list. Restart Spotify after installing a changed hook build:
 
 <pre><code>adb shell am force-stop com.spotify.music
 adb shell monkey -p com.spotify.music 1</code></pre>
@@ -315,8 +315,8 @@ The saved-indicator color can differ from the accent. It controls the mini-playe
 
 This is a pinned-build MVP, not a guarantee that every Spotify-owned color or renderer is themeable.
 
-- Auto Theme is normalized to off whenever fixed-palette mode is active. Its switch is unchecked and disabled in that mode; the native blurred artwork layer is controlled separately by `Show Spotify artwork blur`.
-- The Latte player capture shows the fixed palette with Spotify's blurred artwork layer hidden. Spotify's gray player gradient remains visible, so this image does not claim that every expanded-player background role matches Latte.
+- Auto Theme is normalized to off whenever fixed-palette mode is active. Its switch is unchecked and disabled in that mode. Automatic player backdrop handling does not change either color-mode preference.
+- The verified square-cover player path preserves foreground artwork and uses the theme background. The pinned main video surface retains Spotify's native backdrop; full-screen image/Canvas paths that lack a confirmed binding keep native behavior.
 - Some native or alternate Spotify renderers may retain their original foreground colors.
 - Related-video overflow, selected Repeat, and a positive queued-badge state had no available sample for SpotiTheme acceptance.
 - Rootless LSPatch preparation adds the narrow SpotiTheme provider query and supports palette switching without `QUERY_ALL_PACKAGES`; Spotify was scoped out of Vector during the Android 16/API 36 test. A separate truly-unrooted device test remains open.

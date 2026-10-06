@@ -16,7 +16,6 @@ import com.spotitheme.theme.ThemeRuntime;
 public final class SettingsProvider extends ContentProvider {
     public static final Uri URI = Uri.parse("content://com.spotitheme.settings/state");
     public static final String ENABLED = "theme_enabled", AUTO = "auto_theme", MODE = "auto_theme_mode";
-    public static final String SHOW_ARTWORK_BACKDROP = "show_artwork_backdrop";
 
     @Override public boolean onCreate() { return true; }
 
@@ -51,7 +50,6 @@ public final class SettingsProvider extends ContentProvider {
         result.putBoolean(ThemePaletteStore.FIXED_MODE, fixedPalette);
         result.putBoolean(AUTO, com.spotitheme.theme.ArtworkModePolicy.autoThemeEnabled(
                 fixedPalette, prefs.getBoolean(AUTO, false)));
-        result.putBoolean(SHOW_ARTWORK_BACKDROP, prefs.getBoolean(SHOW_ARTWORK_BACKDROP, false));
         result.putString(MODE, prefs.getString(MODE, "neutral"));
         return result;
     }

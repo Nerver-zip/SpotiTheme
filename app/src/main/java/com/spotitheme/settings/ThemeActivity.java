@@ -131,7 +131,6 @@ public final class ThemeActivity extends Activity {
                         .setMessage(String.join("\n", catalog.errors)).setPositiveButton("OK", null).show());
         toggle("Enable theme", SettingsProvider.ENABLED, true, false, true);
         toggle("Use album artwork colors", ThemePaletteStore.FIXED_MODE, true, true, true);
-        toggle("Show Spotify artwork blur", SettingsProvider.SHOW_ARTWORK_BACKDROP, false, false, true);
         boolean fixedPalette = prefs.getBoolean(ThemePaletteStore.FIXED_MODE, true);
         boolean artwork = !fixedPalette;
         toggle("Auto Theme", SettingsProvider.AUTO, false, false, artwork);
