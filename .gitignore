@@ -5,3 +5,10 @@ local.properties
 *.apk
 *.log
 .idea/
+
+dist/
+*.jks
+*.keystore
+
+__pycache__/
+*.py[cod]

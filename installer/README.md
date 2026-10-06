@@ -1,5 +1,22 @@
 # Interactive installation
 
+## Install without cloning
+
+Download the installer archive from [GitHub Releases](https://github.com/Nerver-zip/SpotiTheme/releases/latest), extract it, and open a terminal in the extracted `SpotiTheme-installer` folder:
+
+```sh
+bash install.sh --rootless --check
+bash install.sh --rootless
+```
+
+Use `--root` instead for the host-based Vector route. Rooted users can also install the release APK entirely through the phone UI described in the README.
+
+The archive includes the signed release module and the pinned patcher, checks the module checksum before delegation, and reuses the same installer logic. It needs no Git checkout, Gradle or app compilation. Keep Bash, ADB and Python 3 available; rootless preparation additionally needs JDK 21 (`java` and `keytool`) and Android SDK build-tools 35.0.0 (`apksigner`). Set `ANDROID_HOME` to your SDK or `APKSIGNER` to the executable. Enable USB debugging and approve the connected computer on the phone.
+
+Start with the supported store-signed Spotify build. This first-install flow must not be used to re-patch an existing LSPatch installation. Keep the extracted directory and its `.project` backups; first replacement deletes Spotify's local data. A same-signer patched update is a separate maintenance operation.
+
+## Install from source
+
 Run from the repository root:
 
 ```sh

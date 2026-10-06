@@ -184,7 +184,16 @@ Rootless installs use an LSPatch-signed APK set. Preparation adds only a narrow 
 
 ## Installation
 
-Clone or open this repository, then use the interactive installer from its root:
+For rooted GUI installation, download the <strong>SpotiTheme APK</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a> and follow <a href="#manual-installation-through-the-phone-ui">the phone UI instructions</a>. No clone, terminal or build tools are needed. Release assets become available after the first tagged release.
+
+For rootless setup without cloning, download <strong>SpotiTheme-installer-vMAJOR.MINOR.PATCH.tar.gz</strong> from the same release, extract it on your computer, open a terminal in its <code>SpotiTheme-installer</code> folder and run:
+
+<pre><code>bash install.sh --rootless --check
+bash install.sh --rootless</code></pre>
+
+This bundle contains the release APK and patching tools; it does not compile the app or include Spotify. It requires Bash, ADB, Python 3, JDK 21 and Android SDK build-tools 35.0.0 (<code>apksigner</code>). Enable USB debugging, connect the phone, approve its USB prompt and keep the supported store-signed Spotify build installed before starting. Keep the extracted folder: original Spotify APK backups are saved inside its <code>.project</code> directory. See <a href="installer/README.md">the installer guide</a> for signing and data-loss details.
+
+For development from a source checkout, run:
 
 <pre><code>./installer/install.sh --check
 ./installer/install.sh --root
@@ -198,7 +207,7 @@ The installer refuses other Spotify versions rather than upgrading or downgradin
 
 ### Manual installation through the phone UI
 
-These steps use Android screens and Vector, with no terminal or ADB commands. Start with a built <strong>SpotiTheme APK</strong> copied to your phone. Building from source is a separate developer task; the source repository itself is not an installable APK. Spotify must already be the supported <strong>9.1.86.2432 / 146555520</strong> build. Check its version in Android <strong>Settings → Apps → Spotify</strong>; stop if it differs.
+These steps use Android screens and Vector, with no terminal or ADB commands. Download the <strong>SpotiTheme APK</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a> to your phone. Building from source is a separate developer task; the source repository itself is not an installable APK. Spotify must already be the supported <strong>9.1.86.2432 / 146555520</strong> build. Check its version in Android <strong>Settings → Apps → Spotify</strong>; stop if it differs.
 
 #### Rooted device with Vector
 
@@ -216,7 +225,7 @@ The Vector CLI and USB debugging are not required for this route. Installing an 
 
 <a href="https://github.com/JingMatrix/LSPatch#usage">LSPatch provides a manager UI</a> that can patch and install apps without a terminal. However, an end-to-end SpotiTheme installation through that UI has <strong>not been validated</strong>. The supported rootless preparation currently uses this project's installer: it adds the settings-provider visibility query, embeds SpotiTheme, preserves all Spotify splits and verifies their signatures. We have not established an equivalent GUI-only preparation flow for these steps. Installing only the SpotiTheme APK does not inject hooks into an unpatched Spotify app.
 
-For rootless setup, use <code>./installer/install.sh --rootless</code> from the <a href="#installation">regular installation instructions</a> and follow the <a href="installer/README.md">installation guide</a>. Replacing the store-signed Spotify app requires uninstalling it, deletes local Spotify data and requires signing in again. Keep the original APK split backup for recovery. A separate truly-unrooted-device validation also remains open.
+For rootless setup, use the downloadable installer bundle from the <a href="#installation">regular installation instructions</a>; no clone or app build is required. Preparation still uses a host terminal. Follow the <a href="installer/README.md">installation guide</a>. Replacing the store-signed Spotify app requires uninstalling it, deletes local Spotify data and requires signing in again. Keep the original APK split backup for recovery. A separate truly-unrooted-device validation also remains open.
 
 #### Choose a theme and check the result
 
@@ -225,6 +234,8 @@ Open <strong>SpotiTheme</strong>, choose a theme and leave <strong>Enable theme<
 Open Spotify and check Home and the expanded player visually. If a newly installed module is not taking effect, use Android <strong>Settings → Apps → Spotify → Force stop</strong> and reopen it. On the rooted route, also confirm SpotiTheme is enabled and Spotify is selected in Vector's scope. See <a href="docs/MVP_VALIDATION.md">MVP validation</a> for supported surfaces and remaining limits.
 
 ### Build and validate
+
+GitHub Actions runs these host checks on pushes and pull requests. Version tags publish signed APKs and checksums; see <a href="docs/RELEASING.md">CI and release setup</a> for signing secrets and versioning.
 
 <pre><code>./gradlew testDebugUnitTest assembleDebug
 python3 -m unittest discover -s installer/tests -v

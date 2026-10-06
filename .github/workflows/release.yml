@@ -1,0 +1,49 @@
+name: Release APK
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      - name: Install pinned SDK components
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Test, lint and build release
+        run: |
+          ./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease --no-daemon
+          python3 -m unittest discover -s installer/tests -v
+          python3 installer/tests/test_vector.py
+          bash -n installer/install.sh installer/lib/*.sh scripts/package-release.sh
+      - name: Sign and verify release APK
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          SPOTITHEME_KEYSTORE_BASE64: ${{ secrets.SPOTITHEME_KEYSTORE_BASE64 }}
+          SPOTITHEME_KEYSTORE_PASSWORD: ${{ secrets.SPOTITHEME_KEYSTORE_PASSWORD }}
+          SPOTITHEME_KEY_ALIAS: ${{ secrets.SPOTITHEME_KEY_ALIAS }}
+          SPOTITHEME_KEY_PASSWORD: ${{ secrets.SPOTITHEME_KEY_PASSWORD }}
+        run: bash scripts/package-release.sh
+      - name: Publish APK and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/*.apk dist/*.tar.gz dist/SHA256SUMS \
+            --verify-tag --title "SpotiTheme $RELEASE_TAG" \
+            --generate-notes --notes-file docs/RELEASE_NOTES_TEMPLATE.md
