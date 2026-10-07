@@ -2,14 +2,21 @@
 
 ## Install without cloning
 
-Download the installer archive from [GitHub Releases](https://github.com/Nerver-zip/SpotiTheme/releases/latest), extract it, and open a terminal in the extracted `SpotiTheme-installer` folder:
+Download the installer archive from [GitHub Releases](https://github.com/Nerver-zip/SpotiTheme/releases/latest), extract it, and open a terminal in the extracted `SpotiTheme-installer` folder. Use the top-level `install.sh` wrapper for either host-based route:
+
+```sh
+bash install.sh --root --check
+bash install.sh --root
+```
+
+This installs the bundled release APK and enables/scopes SpotiTheme through Vector. For rootless installation, run:
 
 ```sh
 bash install.sh --rootless --check
 bash install.sh --rootless
 ```
 
-Use `--root` instead for the host-based Vector route. Rooted users can also install the release APK entirely through the phone UI described in the README.
+Rooted users can also install the release APK through Android and configure Vector entirely in the phone UI described in the README.
 
 The archive includes the signed release module and the pinned patcher, checks the module checksum before delegation, and reuses the same installer logic. It needs no Git checkout, Gradle or app compilation. Keep Bash, ADB and Python 3 available; rootless preparation additionally needs JDK 21 (`java` and `keytool`) and Android SDK build-tools 35.0.0 (`apksigner`). Set `ANDROID_HOME` to your SDK or `APKSIGNER` to the executable. Enable USB debugging and approve the connected computer on the phone.
 
@@ -25,7 +32,7 @@ Run from the repository root:
 ./installer/install.sh --rootless
 ```
 
-For a rooted installation using only Android and Vector screens, see [Manual installation through the phone UI](../README.md#manual-installation-through-the-phone-ui). The commands in this guide describe the host-based installer; a GUI-only SpotiTheme rootless preparation flow has not been validated.
+For a rooted installation using only Android and Vector screens, see [Manual installation through the phone UI](../README.md#manual-installation-through-the-phone-ui). The commands in this guide describe the host-based installer; both root and rootless modes use the downloaded bundle wrapper described above.
 
 The default mode detects root. `--check` only checks the device, Spotify identity and selected framework/tool prerequisites. It does not build, install or change scope. Set `SPOTITHEME_SERIAL` when multiple devices are connected.
 

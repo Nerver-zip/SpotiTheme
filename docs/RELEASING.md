@@ -26,7 +26,7 @@ Release signing values are exposed only to the tag workflow's signing step. The 
 ## Publish a version
 
 1. Update `versionName` in `app/build.gradle` and increase `versionCode` for every release. The first configured version is 0.1.0 / code 1.
-2. Merge the reviewed changes into main and verify CI passes. Keep any device acceptance results current in `docs/MVP_VALIDATION.md`.
+2. Merge the reviewed changes into main and verify CI passes. Keep any device acceptance results current in `docs/VALIDATION.md`.
 3. Push a tag matching the version exactly, such as `v0.1.0`. Use only `vMAJOR.MINOR.PATCH`; the workflow rejects mismatched tags.
 4. The tag workflow repeats unit tests, release lint and installer checks, builds and signs the release APK, verifies the APK signature, computes SHA-256, and publishes a GitHub Release with generated change notes and installation guidance.
 5. Confirm Assets contains `SpotiTheme-v0.1.0.apk`, `SpotiTheme-installer-v0.1.0.tar.gz` and `SHA256SUMS`. Test installation and an update with the same key before announcing the release.

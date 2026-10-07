@@ -1,4 +1,4 @@
-# MVP validation status
+# Validation notes
 
 Updated 2026-10-06. Clean manager/module SHA-256: 09f737f5a4233a2384bb8d6c57e767c63655e9766c36baecd2072fd781611878. This document separates confirmed behavior from remaining device coverage.
 

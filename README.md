@@ -1,6 +1,6 @@
 <h1 align="center">SpotiTheme</h1>
 
-<p align="center"><strong>29 JSON themes for Spotify on Android, applied through a pinned Xposed reflection profile.</strong></p>
+<p align="center"><strong>Give Spotify on Android a new look with 29 themes and custom JSON palettes.</strong></p>
 
 <p align="center">
   <a href="#compatibility"><img src="https://img.shields.io/badge/Spotify-9.1.86.2432-brightgreen?style=flat-square" alt="Spotify 9.1.86.2432"/></a>
@@ -29,20 +29,17 @@
 
 ## What it does
 
-SpotiTheme applies semantic color palettes to supported Spotify Android surfaces. It packages 29 JSON palettes, can read additional <code>.json</code> files from a user-selected folder, and can optionally derive a static color palette from the current artwork with <strong>Auto Theme</strong>.
+Choose from 29 built-in themes or load your own JSON palettes from a folder on your phone. Catppuccin Mocha is the default.
 
-- <strong>Pinned reflection profile:</strong> resolves exact members for Spotify 9.1.86.2432 instead of searching Spotify bytecode at runtime.
-- <strong>Broad surface coverage:</strong> Encore and Compose palettes, Home, Library, Search, playlist creation, mini-player, expanded player, selected media cards, SongDNA, Credits, and Spotify's in-app Connect indicator.
-- <strong>Theme library:</strong> 29 bundled themes, with regular Catppuccin Mocha as the default and only bundled Mocha variant.
-- <strong>User themes:</strong> choose a folder with Android's document picker; refresh to import valid version-1 JSON palettes.
-- <strong>Two installation paths:</strong> Vector/Zygisk for rooted devices or a prepared LSPatch install for rootless devices.
+- Change colors across Home, Library, Search, playlists and the player, as well as supported SongDNA, Credits and Connect views.
+- Switch between light and dark themes in the SpotiTheme app.
+- Use a fixed palette or let **Auto Theme** pick colors from the current album artwork.
+- Control whether Spotify uses album artwork colors on supported surfaces.
+- Install with Vector on a rooted phone, or use the rootless installer on a computer.
 
-Animated artwork backgrounds and their dependent motion, drift, blur, and quality controls are excluded from this MVP. The expanded player handles its backdrop automatically: confirmed square album artwork uses a clear theme background, while a confirmed featured-video surface keeps Spotify's native treatment. Unrecognized media paths keep native behavior. Static Auto Theme color extraction and Use album artwork colors remain separate color controls.
+The expanded player keeps album covers visible against the theme background and preserves Spotify's backdrop for featured videos. Media layouts that aren't supported keep their original appearance. Animated backgrounds aren't included.
 
-The former built-in Mocha Mauve entry is not included. A saved selection using its retired identifier falls back to regular Catppuccin Mocha.
-
-> [!NOTE]
-> The screenshots are examples, not a claim that every Spotify renderer is covered. Spotify Home content is live; its items and network status can change between captures.
+Some Spotify elements may keep their original colors. See <a href="docs/VALIDATION.md">the validation notes</a> for coverage and known limitations.
 
 ## Visual showcase
 
@@ -158,8 +155,6 @@ The former built-in Mocha Mauve entry is not included. A saved selection using i
 
 There is no runtime DexKit dependency or candidate-member scan. The profile names the expected methods and fields for this exact Spotify build; a new Spotify release requires re-verifying those identities instead of falling back to discovery. See <a href="docs/REFLECTION_PROFILE.md">the reflection profile</a> for the mapping and its validation boundaries.
 
-Startup timing is informational rather than a release threshold. The latest clean start of the final rootless build registered the module in <strong>241.164 ms</strong> cumulative main-thread time on the pinned Android 16/API 36 device. SpotiTheme makes no sub-50 ms claim.
-
 ## Compatibility
 
 | Requirement   | Supported / tested value                                                                                                                                                     |
@@ -167,7 +162,7 @@ Startup timing is informational rather than a release threshold. The latest clea
 | Spotify       | <strong>9.1.86.2432</strong>, version code <strong>146555520</strong> only                                                                                                   |
 | Android       | Module minimum API 27; Android 10+ is a practical baseline. On-device validation was performed on <strong>Android 16 / API 36</strong>                                       |
 | Rooted mode   | Magisk with Zygisk and an operational Vector installation                                                                                                                    |
-| Rootless mode | LSPatch injection and manager-selected palette switching verified on Android 16/API 36 with Spotify outside Vector scope; a separate truly-unrooted device test remains open |
+| Rootless mode | LSPatch, prepared with the CLI installer; Android 16/API 36 |
 | Theme files   | Version-1 JSON, UTF-8, at most 64 KiB per file; up to 128 files in the selected folder                                                                                       |
 | Build         | JDK 21, Android SDK/`apksigner`, ADB, Gradle wrapper; Python 3 is required for rootless preparation                                                                          |
 
@@ -180,32 +175,66 @@ Startup timing is informational rather than a release threshold. The latest clea
 >
 > This controls Play Store visibility; it does not prevent a manually installed APK from replacing Spotify.
 
-Rootless installs use an LSPatch-signed APK set. Preparation adds only a narrow package-visibility query for SpotiTheme's settings provider; it does not use `QUERY_ALL_PACKAGES`. On the test handset, Spotify was removed from Vector scope for rootless validation. The handset still has Magisk, so acceptance on a separate truly-unrooted device remains open.
+Rootless installs use LSPatch to embed SpotiTheme into Spotify. The installer preserves Spotify's split APKs and adds access to SpotiTheme's settings provider.
+
+<details>
+<summary><strong>Get the supported Spotify version and check your download</strong></summary>
+
+SpotiTheme targets <strong>com.spotify.music · 9.1.86.2432 · version code 146555520</strong>. Start with the original, unpatched Spotify app. These are third-party download locations, separate from SpotiTheme's releases:
+
+- [Uptodown](https://spotify.br.uptodown.com/android/download/1220860751)
+- APKMirror: [variant 1](https://www.apkmirror.com/apk/spotify-ab/spotify-music-podcasts/spotify-music-and-podcasts-9-1-86-2432-release/spotify-music-and-podcasts-9-1-86-2432-android-apk-download/) · [variant 2](https://www.apkmirror.com/apk/spotify-ab/spotify-music-podcasts/spotify-music-and-podcasts-9-1-86-2432-release/spotify-music-and-podcasts-9-1-86-2432-2-android-apk-download/)
+- [Google Drive mirror](https://drive.google.com/file/d/1I7SIPsDTGCzqCmSUK_weS_gGiD5T0mgv/view?usp=sharing)
+
+Verified file hashes for the downloaded <strong>Uptodown, APKMirror and Drive APKs</strong>, which are byte-identical:
+
+<pre><code>SHA-256: 17b8672c665eeda6cf5b348a426678f0c49eac15c0d6c573cc8daff515c1bee8
+SHA-1:   56ea2286436f7046d1e68505c7eaecda022b6978</code></pre>
+
+Expected <strong>Spotify signing-certificate SHA-256</strong>, matching the saved acceptance build:
+
+<pre><code>6505b181933344f93893d586e399b94616183f04349cb572a9e81a3335e28ffd</code></pre>
+
+These file hashes apply to the verified APK, not to every variant or APKM/XAPK archive. Split packages can have different hashes and require all their parts; a <code>base.apk</code> alone isn't enough. A matching version and signature do not guarantee that every variant works with SpotiTheme.
+
+After installing Spotify, check its version in <strong>Settings → Apps → Spotify</strong> before setting up SpotiTheme.
+
+</details>
 
 ## Installation
 
-For rooted GUI installation, download the <strong>SpotiTheme APK</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a> and follow <a href="#manual-installation-through-the-phone-ui">the phone UI instructions</a>. No clone, terminal or build tools are needed. Release assets become available after the first tagged release.
+Choose the setup that matches your device. Spotify **9.1.86.2432 / 146555520** must already be installed. See <a href="#pin-spotify-to-the-supported-build">how to get the supported Spotify version</a> if needed.
 
-For rootless setup without cloning, download <strong>SpotiTheme-installer-vMAJOR.MINOR.PATCH.tar.gz</strong> from the same release, extract it on your computer, open a terminal in its <code>SpotiTheme-installer</code> folder and run:
+### Rooted phone (no computer)
 
-<pre><code>bash install.sh --rootless --check
-bash install.sh --rootless</code></pre>
+1. Download the <strong>SpotiTheme APK</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a> and install it using your phone's package installer.
+2. Open Vector, enable SpotiTheme, and select Spotify in its scope. See <a href="#manual-installation-through-the-phone-ui">the phone UI guide</a> for details.
+3. Force-stop Spotify in Android Settings, reopen it, then open SpotiTheme to choose a theme.
 
-This bundle contains the release APK and patching tools; it does not compile the app or include Spotify. It requires Bash, ADB, Python 3, JDK 21 and Android SDK build-tools 35.0.0 (<code>apksigner</code>). Enable USB debugging, connect the phone, approve its USB prompt and keep the supported store-signed Spotify build installed before starting. Keep the extracted folder: original Spotify APK backups are saved inside its <code>.project</code> directory. See <a href="installer/README.md">the installer guide</a> for signing and data-loss details.
+### Install from a computer
 
-For development from a source checkout, run:
+1. Download and extract <strong>SpotiTheme-installer-vMAJOR.MINOR.PATCH.tar.gz</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a>.
+2. Install the host tools: Bash, ADB and Python 3. For rootless setup, also install JDK 21 and Android SDK build-tools 35.0.0 (<code>apksigner</code>).
+3. On your phone, enable USB debugging, connect it to the computer and approve the debugging prompt. Keep the supported Spotify version installed.
+4. Open a terminal in the extracted <code>SpotiTheme-installer</code> folder. Run the check and install commands for your setup below.
 
-<pre><code>./installer/install.sh --check
-./installer/install.sh --root
-./installer/install.sh --rootless</code></pre>
+**Rooted with Vector** — installs the included SpotiTheme APK and configures its Vector scope:
 
-- <code>--check</code> verifies the connected device, pinned Spotify identity, and available framework prerequisites without installing or changing scope.
-- <code>--root</code> builds and tests the module, installs it, enables <code>com.spotitheme</code> in Vector, and adds Spotify to the module scope after confirmation. Restart Spotify to load a newly installed module.
-- <code>--rootless</code> pulls Spotify split APKs, prepares a local LSPatch build, verifies the result, then prompts before replacing the store-signed app.
+```sh
+bash install.sh --root --check
+bash install.sh --root
+```
 
-The installer refuses other Spotify versions rather than upgrading or downgrading the app. It does not start playback. See <a href="installer/README.md">the installation guide</a> for prerequisites, prompts, signing details, and recovery behavior.
+**Rootless with LSPatch** — prepares Spotify with SpotiTheme embedded and installs the theme manager:
 
-### Manual installation through the phone UI
+```sh
+bash install.sh --rootless --check
+bash install.sh --rootless
+```
+
+The archive includes SpotiTheme and the patching tools; it does not include Spotify. The rootless installer saves the original Spotify APK files in the extracted folder for recovery. Replacing store-signed Spotify clears its local data, so you will need to sign in again. See the <a href="installer/README.md">installer guide</a> for recovery details.
+
+### Manual installation through the phone UI (Root require required)
 
 These steps use Android screens and Vector, with no terminal or ADB commands. Download the <strong>SpotiTheme APK</strong> from <a href="https://github.com/Nerver-zip/SpotiTheme/releases/latest">GitHub Releases</a> to your phone. Building from source is a separate developer task; the source repository itself is not an installable APK. Spotify must already be the supported <strong>9.1.86.2432 / 146555520</strong> build. Check its version in Android <strong>Settings → Apps → Spotify</strong>; stop if it differs.
 
@@ -221,28 +250,13 @@ These steps use Android screens and Vector, with no terminal or ADB commands. Do
 
 The Vector CLI and USB debugging are not required for this route. Installing an updated SpotiTheme APK with the same signing key follows the same Android installation flow; force-stop and reopen Spotify afterward.
 
-#### Rootless device
+### Choose a theme
 
-<a href="https://github.com/JingMatrix/LSPatch#usage">LSPatch provides a manager UI</a> that can patch and install apps without a terminal. However, an end-to-end SpotiTheme installation through that UI has <strong>not been validated</strong>. The supported rootless preparation currently uses this project's installer: it adds the settings-provider visibility query, embeds SpotiTheme, preserves all Spotify splits and verifies their signatures. We have not established an equivalent GUI-only preparation flow for these steps. Installing only the SpotiTheme APK does not inject hooks into an unpatched Spotify app.
+Open <strong>SpotiTheme</strong>, turn on <strong>Enable theme</strong> and select a palette. Leave <strong>Use album artwork colors</strong> off to keep your chosen colors; turn it on to use Spotify's artwork colors or enable <strong>Auto Theme</strong> to generate a palette from the artwork. The player background adjusts automatically to album covers and featured videos.
 
-For rootless setup, use the downloadable installer bundle from the <a href="#installation">regular installation instructions</a>; no clone or app build is required. Preparation still uses a host terminal. Follow the <a href="installer/README.md">installation guide</a>. Replacing the store-signed Spotify app requires uninstalling it, deletes local Spotify data and requires signing in again. Keep the original APK split backup for recovery. A separate truly-unrooted-device validation also remains open.
+To add your own themes, tap <strong>Choose theme folder</strong>, select a folder containing JSON palettes and allow read access. Tap <strong>Refresh themes</strong> after adding or editing files.
 
-#### Choose a theme and check the result
-
-Open <strong>SpotiTheme</strong>, choose a theme and leave <strong>Enable theme</strong> on. For a fixed palette, leave <strong>Use album artwork colors</strong> off; Auto Theme is then unchecked and disabled. Player backdrop handling is automatic and has no switch. To import JSON themes, tap <strong>Choose theme folder</strong>, select the folder, grant read access and tap <strong>Refresh themes</strong> after changing its files.
-
-Open Spotify and check Home and the expanded player visually. If a newly installed module is not taking effect, use Android <strong>Settings → Apps → Spotify → Force stop</strong> and reopen it. On the rooted route, also confirm SpotiTheme is enabled and Spotify is selected in Vector's scope. See <a href="docs/MVP_VALIDATION.md">MVP validation</a> for supported surfaces and remaining limits.
-
-### Build and validate
-
-GitHub Actions runs these host checks on pushes and pull requests. Version tags publish signed APKs and checksums; see <a href="docs/RELEASING.md">CI and release setup</a> for signing secrets and versioning.
-
-<pre><code>./gradlew testDebugUnitTest assembleDebug
-python3 -m unittest discover -s installer/tests -v
-bash -n installer/install.sh installer/lib/*.sh
-./installer/install.sh --check</code></pre>
-
-LSPatch injection and manager-selected Latte/Mocha palettes were confirmed on Android 16/API 36 with Spotify removed from Vector scope. Rootless preparation adds a narrow provider query, with no `QUERY_ALL_PACKAGES` permission. The handset itself still has Magisk, so this does not count as acceptance on a separate truly-unrooted device.
+After installing or updating SpotiTheme, force-stop Spotify in <strong>Settings → Apps → Spotify</strong> and reopen it. On rooted devices, SpotiTheme must also be enabled in Vector with Spotify selected in its scope.
 
 ### JSON theme format
 
@@ -266,16 +280,7 @@ The saved-indicator color can differ from the accent. It controls the mini-playe
 
 ## Validation boundaries
 
-This is a pinned-build MVP, not a guarantee that every Spotify-owned color or renderer is themeable.
-
-- Auto Theme is normalized to off whenever fixed-palette mode is active. Its switch is unchecked and disabled in that mode. Automatic player backdrop handling does not change either color-mode preference.
-- The verified square-cover player path preserves foreground artwork and uses the theme background. The pinned main video surface retains Spotify's native backdrop; full-screen image/Canvas paths that lack a confirmed binding keep native behavior.
-- Some native or alternate Spotify renderers may retain their original foreground colors.
-- Related-video overflow, selected Repeat, and a positive queued-badge state had no available sample for SpotiTheme acceptance.
-- Rootless LSPatch preparation adds the narrow SpotiTheme provider query and supports palette switching without `QUERY_ALL_PACKAGES`; Spotify was scoped out of Vector during the Android 16/API 36 test. A separate truly-unrooted device test remains open.
-- Spotify Connect was visible as Spotifast in the app; Android's system route owner remained unverified.
-
-See <a href="docs/MVP_VALIDATION.md">MVP validation</a>, <a href="docs/STARTUP_MEASUREMENT.md">startup measurement</a>, and <a href="docs/REFLECTION_PROFILE.md">reflection profile</a> for evidence and limitations.
+SpotiTheme supports the pinned Spotify build listed above. Some Spotify elements retain their original appearance; see <a href="docs/VALIDATION.md">validation notes</a> for details.
 
 ## Acknowledgements
 
